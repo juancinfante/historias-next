@@ -59,7 +59,7 @@ export async function GET(req: NextRequest) {
         const mes = searchParams.get('mes')
 
         const page = parseInt(searchParams.get('page') || '1')
-        const limit = parseInt(searchParams.get('limit') || '6')
+        const limit = parseInt(searchParams.get('limit') || '10')
         const skip = (page - 1) * limit
 
         const query: any = {}
