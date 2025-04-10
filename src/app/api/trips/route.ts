@@ -55,7 +55,8 @@ export async function GET(req: NextRequest) {
         const searchParams = req.nextUrl.searchParams
 
         const destino = searchParams.get('destino')
-        const origen = searchParams.get('origen')
+        const region = searchParams.get('region')
+        const origen = searchParams.get('origen') // <- este era el que faltaba
         const mes = searchParams.get('mes')
 
         const page = parseInt(searchParams.get('page') || '1')
@@ -66,6 +67,10 @@ export async function GET(req: NextRequest) {
 
         if (destino) {
             query.destino = { $regex: new RegExp(destino, 'i') }
+        }
+
+        if (region) {
+            query.region = { $regex: new RegExp(region, 'i') }
         }
 
         if (origen) {
@@ -92,14 +97,16 @@ export async function GET(req: NextRequest) {
             }
         }
 
-        let sort: any = { creadoEn: -1 } // Por defecto, último creado primero
+        let sort: any = { creadoEn: -1 }
         const total = await trips.countDocuments(query)
-        const ordenPrecio = searchParams.get('ordenPrecio') // asc | desc
+
+        const ordenPrecio = searchParams.get('ordenPrecio')
         if (ordenPrecio === 'asc') {
             sort = { precio: 1 }
         } else if (ordenPrecio === 'desc') {
             sort = { precio: -1 }
         }
+
         const resultados = await trips
             .find(query)
             .sort(sort)
@@ -114,10 +121,10 @@ export async function GET(req: NextRequest) {
             totalPages: Math.ceil(total / limit),
             data: resultados
         })
-
     } catch (error) {
         console.error('Error al obtener viajes:', error)
         return NextResponse.json({ error: 'Error al obtener viajes' }, { status: 500 })
     }
 }
+
 

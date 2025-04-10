@@ -11,7 +11,15 @@ import ChatBot from "./components/ChatBot"
 export default function Home() {
   return (
     <>
-      <Hero />
+      <Hero
+        titulo="Descubre el norte Argentino"
+        subtitulo="Creamos experiencias únicas y memorables para que disfrutes de los destinos más increíbles del planeta."
+        botonTexto="Explorar Destinos"
+        botonHref="/paquetes"
+        imagen="/img/hornocal.webp"
+        mostrarBoton={true}
+      />
+
       <SectionExperiencias />
       <SectionNaturaleza />
       <CarouselPaquetes />

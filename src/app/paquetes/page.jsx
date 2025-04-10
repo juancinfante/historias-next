@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Hero from '../components/Hero'
+import Image from 'next/image'
 
 export default function PaquetesPage() {
     const router = useRouter()
@@ -9,48 +11,83 @@ export default function PaquetesPage() {
     const [filtrosActivos, setFiltrosActivos] = useState([])
     const [trips, setTrips] = useState([])
     const [ordenPrecio, setOrdenPrecio] = useState('')
+    const [loading, setLoading] = useState(true)
 
     const fetchTrips = async () => {
+        setLoading(true)
         const params = new URLSearchParams()
 
         filtrosActivos.forEach((filtro) => {
-            if (filtro.toLowerCase().includes('2025')) {
-                if (filtro.toLowerCase().includes('abril')) params.set('mes', '4')
-                if (filtro.toLowerCase().includes('mayo')) params.set('mes', '5')
-                if (filtro.toLowerCase().includes('junio')) params.set('mes', '6')
-            } else if (['ushuaia', 'mendoza', 'iguazú', 'europa'].some((d) => filtro.toLowerCase().includes(d))) {
-                params.set('destino', filtro)
-            } else if (['buenos aires', 'córdoba', 'rosario'].some((o) => filtro.toLowerCase().includes(o))) {
+            const lowerFiltro = filtro.toLowerCase()
+
+            const meses = {
+                'enero': '1', 'febrero': '2', 'marzo': '3', 'abril': '4', 'mayo': '5',
+                'junio': '6', 'julio': '7', 'agosto': '8', 'septiembre': '9',
+                'octubre': '10', 'noviembre': '11', 'diciembre': '12'
+            }
+            for (const [mesNombre, mesNumero] of Object.entries(meses)) {
+                if (lowerFiltro === mesNombre) {
+                    params.set('mes', mesNumero)
+                    return
+                }
+            }
+
+            if (['europa', 'brasil', 'argentina'].includes(lowerFiltro)) {
+                params.set('region', filtro)
+            } else if (['buenos aires', 'córdoba', 'rosario', 'santiago del estero', 'tucuman'].includes(lowerFiltro)) {
                 params.set('origen', filtro)
+            } else {
+                params.set('destino', filtro)
             }
         })
 
         if (ordenPrecio === 'asc') params.set('ordenPrecio', 'asc')
         if (ordenPrecio === 'desc') params.set('ordenPrecio', 'desc')
 
-        router.push(`/paquetes?${params.toString()}`)
+        router.push(`/paquetes?${params.toString()}`, { scroll: false })
+
 
         try {
-            const res = await fetch(`/api/trips?${params.toString()}`)
+            const res = await fetch(`/api/trips?${params.toString()}&limit=10`)
             const data = await res.json()
-            setTrips(data.data || [])
+            console.log(data)
+
+            let fetchedTrips = Array.isArray(data.data) ? data.data : []
+
+            if (ordenPrecio === 'asc') {
+                fetchedTrips.sort((a, b) => a.precio - b.precio)
+            } else if (ordenPrecio === 'desc') {
+                fetchedTrips.sort((a, b) => b.precio - a.precio)
+            }
+            setTrips(fetchedTrips)
         } catch (error) {
             console.error('Error al obtener viajes', error)
+            setTrips([]) // Para mostrar "no se encontraron viajes"
+        } finally {
+            setLoading(false)
         }
     }
 
+
     useEffect(() => {
         const init = []
-        const destino = searchParams.get('destino')
+        const region = searchParams.get('region')
         const origen = searchParams.get('origen')
+        const destino = searchParams.get('destino')
         const mes = searchParams.get('mes')
         const orden = searchParams.get('ordenPrecio')
 
-        if (destino) init.push(destino)
+        if (region) init.push(region)
         if (origen) init.push(origen)
-        if (mes === '4') init.push('Abril 2025')
-        if (mes === '5') init.push('Mayo 2025')
-        if (mes === '6') init.push('Junio 2025')
+        if (destino) init.push(destino)
+
+        const mesesTexto = {
+            '1': 'Enero', '2': 'Febrero', '3': 'Marzo', '4': 'Abril', '5': 'Mayo',
+            '6': 'Junio', '7': 'Julio', '8': 'Agosto', '9': 'Septiembre',
+            '10': 'Octubre', '11': 'Noviembre', '12': 'Diciembre'
+        }
+        if (mes && mesesTexto[mes]) init.push(mesesTexto[mes])
+
         if (orden === 'asc') setOrdenPrecio('asc')
         if (orden === 'desc') setOrdenPrecio('desc')
 
@@ -62,10 +99,11 @@ export default function PaquetesPage() {
     }, [filtrosActivos, ordenPrecio])
 
     const handleCheckboxChange = (e) => {
-        const label = e.target.parentElement?.textContent?.trim()
-        if (!label) return
+        const value = e.target.value
         setFiltrosActivos((prev) =>
-            e.target.checked ? [...prev, label] : prev.filter((item) => item !== label)
+            e.target.checked
+                ? [...prev, value]
+                : prev.filter((item) => item !== value)
         )
     }
 
@@ -75,23 +113,25 @@ export default function PaquetesPage() {
         else if (value === 'Precio más alto') setOrdenPrecio('desc')
         else setOrdenPrecio('')
     }
-    // Toggle para los menús móviles
-    const toggleMenu = (id) => {
-        const menu = document.getElementById(id)
-        if (!menu) return
+    useEffect(() => {
+        const toggleMenu = (id) => {
+            const menu = document.getElementById(id)
+            if (!menu) return
 
-        if (menu.classList.contains('hidden')) {
-            menu.classList.remove('hidden')
-            requestAnimationFrame(() => {
-                menu.classList.add('active')
-            })
-        } else {
-            menu.classList.remove('active')
-            setTimeout(() => menu.classList.add('hidden'), 300)
+            if (menu.classList.contains('hidden')) {
+                menu.classList.remove('hidden')
+                requestAnimationFrame(() => {
+                    menu.classList.add('active')
+                })
+            } else {
+                menu.classList.remove('active')
+                setTimeout(() => menu.classList.add('hidden'), 300)
+            }
         }
-    }
 
-    window.toggleMenu = toggleMenu
+        // Solo se ejecuta en el cliente
+        window.toggleMenu = toggleMenu
+    }, [])
     const removeFiltro = (filtro) => {
         setFiltrosActivos((prev) => prev.filter((item) => item !== filtro))
     }
@@ -111,21 +151,33 @@ export default function PaquetesPage() {
     }, [])
 
     return (
-        <main className="bg-gray-50 text-gray-800">
-            <header
-                className="relative h-[70vh] bg-cover bg-center flex items-center justify-center text-white"
-                style={{ backgroundImage: "url('')" }}
-            >
-                <div className="bg-black bg-opacity-60 absolute inset-0" />
-                <div className="relative z-10 text-center px-4">
+        <>
+            {/* <!-- Hero Section --> */}
+            <header className="relative h-screen w-full">
+                  {/* Imagen de fondo */}
+                  <Image
+                    src="/img/hornocal.webp"
+                    alt="Imagen de fondo"
+                    fill
+                    priority
+                    sizes="10vw"
+                    className="object-cover z-0"
+                  />
+            
+                  {/* Overlay negro */}
+                  <div className="absolute inset-0 bg-black/50 z-10" />
+            
+                  {/* Contenido */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-white z-20 px-4 text-center">
                     <h1 className="text-4xl md:text-5xl font-bold">Paquetes</h1>
-                </div>
-            </header>
+                  </div>
+                </header>
+        <main className=" text-gray-800 bg-[rgb(245,247,249)] ">
 
-            <div className="max-w-7xl mx-auto px-4 py-6">
+            <div className="max-w-7xl mx-auto px-4 py-6 mt-[100px] ">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <aside className="hidden md:block md:col-span-1">
-                        <div id="filtros-activos" className="mb-4">
+                        <div id="filtros-activos" className="mb-2">
                             <h3 className="text-sm font-semibold mb-2">Filtros activos</h3>
                             <div className="flex flex-wrap gap-2 text-sm" id="chips-container">
                                 {filtrosActivos.map((filtro) => (
@@ -143,33 +195,65 @@ export default function PaquetesPage() {
                         </div>
                         <div className="bg-white p-4 shadow rounded">
                             <h2 className="text-lg font-semibold mb-4">Filtros</h2>
-
-                            <div className="mb-4">
-                                <h3 className="text-sm font-semibold mb-2">Destino</h3>
-                                <ul className="space-y-2">
-                                    <li><label><input type="checkbox" className="mr-2" onChange={handleCheckboxChange} />Europa</label></li>
-                                    <li><label><input type="checkbox" className="mr-2" onChange={handleCheckboxChange} />Mendoza</label></li>
-                                    <li><label><input type="checkbox" className="mr-2" onChange={handleCheckboxChange} />Iguazú</label></li>
+                            <details className="mb-4">
+                                <summary className="cursor-pointer text-sm font-semibold mb-2">Salidas</summary>
+                                <ul className="space-y-2 mt-2">
+                                    {["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"].map((mes) => (
+                                        <li key={mes}>
+                                            <label className="flex items-center">
+                                                <input
+                                                    type="checkbox"
+                                                    className="mr-2"
+                                                    value={mes}
+                                                    checked={filtrosActivos.includes(mes)}
+                                                    onChange={handleCheckboxChange}
+                                                />
+                                                {mes}
+                                            </label>
+                                        </li>
+                                    ))}
                                 </ul>
-                            </div>
+                            </details>
 
-                            <div className="mb-4">
-                                <h3 className="text-sm font-semibold mb-2">Salidas</h3>
-                                <ul className="space-y-2">
-                                    <li><label><input type="checkbox" className="mr-2" onChange={handleCheckboxChange} />Abril 2025</label></li>
-                                    <li><label><input type="checkbox" className="mr-2" onChange={handleCheckboxChange} />Mayo 2025</label></li>
-                                    <li><label><input type="checkbox" className="mr-2" onChange={handleCheckboxChange} />Junio 2025</label></li>
+                            <details className="mb-4">
+                                <summary className="cursor-pointer text-sm font-semibold mb-2">Desde</summary>
+                                <ul className="space-y-2 mt-2">
+                                    {["Buenos Aires", "Córdoba", "Rosario", "Santiago del Estero", "Tucuman"].map((item) => (
+                                        <li key={item}>
+                                            <label className="flex items-center">
+                                                <input
+                                                    type="checkbox"
+                                                    className="mr-2"
+                                                    value={item}
+                                                    checked={filtrosActivos.includes(item)}
+                                                    onChange={handleCheckboxChange}
+                                                />
+                                                {item}
+                                            </label>
+                                        </li>
+                                    ))}
                                 </ul>
-                            </div>
+                            </details>
 
-                            <div>
-                                <h3 className="text-sm font-semibold mb-2">Origen</h3>
-                                <ul className="space-y-2">
-                                    <li><label><input type="checkbox" className="mr-2" onChange={handleCheckboxChange} />Buenos Aires</label></li>
-                                    <li><label><input type="checkbox" className="mr-2" onChange={handleCheckboxChange} />Córdoba</label></li>
-                                    <li><label><input type="checkbox" className="mr-2" onChange={handleCheckboxChange} />Rosario</label></li>
+                            <details>
+                                <summary className="cursor-pointer text-sm font-semibold mb-2">Región</summary>
+                                <ul className="space-y-2 mt-2">
+                                    {["Argentina", "Brasil", "Europa"].map((item) => (
+                                        <li key={item}>
+                                            <label className="flex items-center">
+                                                <input
+                                                    type="checkbox"
+                                                    className="mr-2"
+                                                    value={item}
+                                                    checked={filtrosActivos.includes(item)}
+                                                    onChange={handleCheckboxChange}
+                                                />
+                                                {item}
+                                            </label>
+                                        </li>
+                                    ))}
                                 </ul>
-                            </div>
+                            </details>
                         </div>
                     </aside>
 
@@ -183,6 +267,8 @@ export default function PaquetesPage() {
                                 <select
                                     id="ordenar"
                                     className="border border-gray-300 rounded px-2 py-1 text-sm"
+                                    value={ordenPrecio === 'asc' ? 'Precio más bajo' : ordenPrecio === 'desc' ? 'Precio más alto' : 'Recomendado'}
+                                    onChange={handleOrdenChange}
                                 >
                                     <option>Recomendado</option>
                                     <option>Precio más bajo</option>
@@ -192,44 +278,62 @@ export default function PaquetesPage() {
                         </div>
 
                         <div className="max-w-7xl mx-auto px-4 py-6">
-                            {trips.length === 0 ? (
-                                <p className="text-center text-gray-500">No se encontraron viajes.</p>
-                            ) : (
-                                <div className="grid gap-6">
-                                    {trips.map((trip) => (
-                                        <div
-                                            key={trip._id}
-                                            className="bg-white rounded shadow flex flex-col md:flex-row overflow-hidden"
-                                        >
-                                            <img
-                                                src={trip.portada}
-                                                className="w-full md:w-1/3 object-cover"
-                                                alt={trip.destino}
-                                            />
-                                            <div className="p-4 flex flex-col justify-between flex-grow">
-                                                <div>
-                                                    <h3 className="text-lg font-bold mb-1">{trip.titulo}</h3>
-                                                    <p className="text-sm text-gray-600">Destino: {trip.destino}</p>
-                                                    <p className="text-sm text-gray-600">Origen: {trip.origen}</p>
-                                                    <p className="text-sm text-gray-600">
-                                                        Fechas:{' '}
-                                                        {trip.fechas?.map((f) => new Date(f.salida)).join(', ')}
-                                                    </p>
-                                                    <p className="text-sm text-gray-600">{trip.descripcion}</p>
-                                                </div>
-                                                <div className="flex items-center justify-between mt-4">
-                                                    <p className="text-lg font-bold text-blue-800">
-                                                        ${trip.precio}
-                                                    </p>
-                                                    <button className="bg-blue-600 text-white px-4 py-2 text-sm rounded hover:bg-blue-700">
-                                                        Comprar
-                                                    </button>
-                                                </div>
+                            {loading ? (
+                                <div className="space-y-4">
+                                    {[...Array(6)].map((_, idx) => (
+                                        <div key={idx} className="animate-pulse flex space-x-4">
+                                            <div className="rounded bg-gray-200 h-24 w-1/3"></div>
+                                            <div className="flex-1 space-y-4 py-1">
+                                                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                                                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                                                <div className="h-4 bg-gray-200 rounded w-2/3"></div>
                                             </div>
                                         </div>
                                     ))}
                                 </div>
-                            )}
+                            ) :
+                                trips.length === 0 ? (
+                                    <p className="text-center text-gray-500">No se encontraron viajes.</p>
+                                ) : (
+                                    <div className="grid gap-6">
+                                        {trips.map((trip) => (
+                                            <div
+                                                key={trip._id}
+                                                className="bg-white rounded shadow flex h-[230px] flex-col md:flex-row overflow-hidden"
+                                            >
+                                                <img
+                                                    src={trip.portada}
+                                                    className="w-full md:w-1/3 h-full object-cover"
+                                                    alt={trip.destino}
+                                                />
+                                                <div className="p-4 flex flex-col justify-between flex-grow">
+                                                    <div>
+                                                        <h3 className="text-lg font-bold mb-1">{trip.nombre}</h3>
+                                                        <p className="text-sm text-gray-600"><strong className='text-gray-800'>Destino:</strong> {trip.destino}</p>
+                                                        <p className="text-sm text-gray-600"><strong className='text-gray-800'>Origen:</strong> {trip.origen}</p>
+                                                        <p className="text-sm text-gray-600">
+                                                            <strong className='text-gray-800'>Salida:</strong>{' '}
+                                                            {trip.fechas[0].salida}
+                                                        </p>
+                                                        <p className="text-sm text-gray-600">
+                                                            <strong className='text-gray-800'>Regreso:</strong>{' '}
+                                                            {trip.fechas[0].regreso}
+                                                        </p>
+                                                        <p className="text-sm text-gray-600">{trip.descripcion}</p>
+                                                    </div>
+                                                    <div className="flex items-center justify-between mt-4">
+                                                        <p className="text-lg font-bold text-blue-900">
+                                                            ${trip.precio}
+                                                        </p>
+                                                        <button className="bg-[rgb(43,52,71)] hover:cursor-pointer text-white px-4 py-2 text-sm rounded">
+                                                            Comprar
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                         </div>
                     </section>
                 </div>
@@ -356,5 +460,7 @@ export default function PaquetesPage() {
             </div>
 
         </main>
+        </>
+
     )
 }

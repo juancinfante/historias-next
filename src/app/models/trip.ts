@@ -6,6 +6,7 @@ export interface FechaViaje {
   export interface Trip {
     nombre: string
     portada: string
+    descripcion: string
     destino: string
     origen: string
     fechas: FechaViaje[]
