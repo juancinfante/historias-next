@@ -9,15 +9,16 @@ const client = new MongoClient(uri)
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json()
-        const { nombre, portada, destino, origen, fechas, incluye, noIncluye, precio } = body as Trip
+        const { nombre, portada, destino, origen, fechas, incluye, noIncluye, precio, descripcion } = body as Trip
 
-        if (!nombre || !portada || !precio || !destino || !origen || !fechas?.length) {
+        if (!nombre || !portada || !precio || !destino || !origen || !fechas?.length || descripcion) {
             return NextResponse.json({ error: 'Faltan campos requeridos' }, { status: 400 })
         }
 
         await client.connect()
         const db = client.db('historias') // usa el nombre por defecto de la URI
         const trips = db.collection('trips')
+        const slug = nombre.toLowerCase().replace(/\s+/g, '-').normalize("NFD").replace(/[\u0300-\u036f]/g, '');
 
         const newTrip = {
             nombre,
@@ -26,6 +27,8 @@ export async function POST(req: NextRequest) {
             origen,
             precio,
             fechas,
+            slug,
+            descripcion,
             incluye: incluye || [],
             noIncluye: noIncluye || [],
             creadoEn: new Date()

@@ -3,17 +3,13 @@ import { ObjectId } from 'mongodb'
 import clientPromise from '../../../lib/mongodb'
 import { Trip } from '../../../models/trip'
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: { slug: string } }) {
   try {
-    const { id } = await params
-
-    if (!ObjectId.isValid(id)) {
-      return NextResponse.json({ error: 'ID inválido' }, { status: 400 })
-    }
+    const { slug } = await params
 
     const client = await clientPromise
     const db = client.db('historias')
-    const trip = await db.collection('trips').findOne({ _id: new ObjectId(id) })
+    const trip = await db.collection('trips').findOne({ slug: slug })
 
     if (!trip) {
       return NextResponse.json({ error: 'Viaje no encontrado' }, { status: 404 })

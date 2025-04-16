@@ -113,6 +113,22 @@ export default function PaquetesPage() {
         else if (value === 'Precio más alto') setOrdenPrecio('desc')
         else setOrdenPrecio('')
     }
+    function formatearFechaLarga(fechaIso) {
+        const fecha = new Date(fechaIso);
+      
+        const opciones = {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric'
+        };
+      
+        const fechaFormateada = fecha.toLocaleDateString('es-AR', opciones);
+      
+        // Capitalizar la primera letra
+        return fechaFormateada.charAt(0).toUpperCase() + fechaFormateada.slice(1);
+      }
+      
     useEffect(() => {
         const toggleMenu = (id) => {
             const menu = document.getElementById(id)
@@ -320,10 +336,10 @@ export default function PaquetesPage() {
                                                                 <strong className="text-gray-800">Origen:</strong> {trip.origen}
                                                             </p>
                                                             <p className="text-sm text-gray-600">
-                                                                <strong className="text-gray-800">Salida:</strong> {trip.fechas[0].salida}
+                                                                <strong className="text-gray-800">Salida:</strong> {formatearFechaLarga(trip.fechas[0].salida)}
                                                             </p>
                                                             <p className="text-sm text-gray-600">
-                                                                <strong className="text-gray-800">Regreso:</strong> {trip.fechas[0].regreso}
+                                                                <strong className="text-gray-800">Regreso:</strong> {formatearFechaLarga(trip.fechas[0].regreso)}
                                                             </p>
                                                             <p className="text-sm text-gray-600">{trip.descripcion}</p>
                                                         </div>
