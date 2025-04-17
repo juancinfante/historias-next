@@ -53,7 +53,21 @@ export default function Page() {
 
     return (
         <>
-            <section className="max-w-6xl mx-auto px-4 py-20 mt-[40px]">
+            {/* Hero */}
+            <header className="relative h-[250px] w-full">
+                <Image
+                    src="/img/hornocal.webp"
+                    alt="Imagen de fondo"
+                    fill
+                    priority
+                    className="object-cover z-0"
+                />
+                <div className="absolute inset-0 bg-black/50 z-10" />
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-white z-20 px-4 text-center">
+                    <h1 className="text-4xl md:text-5xl font-bold">Reserva</h1>
+                </div>
+            </header>
+            <section className="max-w-6xl mx-auto px-4 py-10">
                 <div className="grid md:grid-cols-3 gap-6">
                     <div className="md:col-span-2">
                         {/* Mobile resumen */}
@@ -79,12 +93,12 @@ export default function Page() {
                                 <tr>
                                     <th>Producto</th>
                                     <th className="text-center">Precio</th>
-                                    <th className="text-center">Cantidad</th>
+                                    <th className="text-center">Personas</th>
                                     <th className="text-right">Subtotal</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <tr className="bg-white rounded-lg shadow">
+                            <tbody className="rounded-lg shadow bg-white">
+                                <tr>
                                     <td className="flex items-center gap-4 p-4">
                                         <img src={trip.portada} className="w-20 h-20 rounded object-cover" alt={trip.destino} />
                                         <div>
@@ -131,7 +145,7 @@ export default function Page() {
                         </div>
                         <a
                             href={`/finalizar?s=${slug}&p=${cantidad}&f=${fechaIndex}`}
-                            className="w-full bg-[rgb(43,52,71)] hover:bg-teal-500 text-white font-semibold py-2 px-2 rounded-full transition"
+                            className="w-full bg-[rgb(43,52,71)] hover:bg-teal-500 text-white font-semibold py-2 px-4 rounded-md transition"
                         >
                             Finalizar compra
                         </a>

@@ -1,6 +1,6 @@
 export default function Footer() {
     return (
-      <footer className="bg-[rgb(43,52,71)] text-white py-10 px-4 lg:px-0">
+      <footer className="bg-[rgb(43,52,71)] text-white py-10 px-4 lg:px-0 bottom-0">
         <div className="container mx-auto max-w-[1300px] grid grid-cols-1 md:grid-cols-4 gap-6 text-center md:text-left">
           {/* Marca */}
           <div>

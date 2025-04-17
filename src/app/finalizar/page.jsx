@@ -28,7 +28,6 @@ export default function FinalizarCompra() {
     }, [slug])
 
     if (loading) return <p className="p-6 text-center">Cargando viaje...</p>
-    if (!trip) return <p className="p-6 text-center">Viaje no encontrado</p>
 
     const fecha = trip.fechas[fechaIndex]
     const precioUnitario = trip.precio
@@ -50,9 +49,10 @@ export default function FinalizarCompra() {
                 />
                 <div className="absolute inset-0 bg-black/50 z-10" />
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-white z-20 px-4 text-center">
-                    <h1 className="text-4xl md:text-5xl font-bold">{trip.nombre}</h1>
+                    <h1 className="text-4xl md:text-5xl font-bold">Finalizar reserva</h1>
                 </div>
             </header>
+           
             <section className="max-w-6xl mx-auto px-4 py-10 mt-[60px]">
                 <h2 className="text-2xl font-bold mb-6">Finalizar Compra</h2>
                 <div className="grid md:grid-cols-2 gap-8">
@@ -133,7 +133,7 @@ export default function FinalizarCompra() {
                                         <span>Mercado Pago</span>
                                     </div>
                                 </div>
-                                <div class="mt-2 flex flex-wrap gap-2">
+                                <div className="mt-2 flex flex-wrap gap-2">
                                     <img src="https://dk0k1i3js6c49.cloudfront.net/iconos-pago/mastercard.png" alt="Mastercard" className="h-5" />
                                     <img src="https://dk0k1i3js6c49.cloudfront.net/iconos-pago/visa.png" alt="Visa" className="h-5" />
                                     <img src="https://dk0k1i3js6c49.cloudfront.net/iconos-pago/american-express.png" alt="Naranja" className="h-5" />
