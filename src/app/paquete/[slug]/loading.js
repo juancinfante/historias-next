@@ -11,7 +11,7 @@ export default function Loading() {
             </header>
 
             {/* Main content */}
-            <section className="max-w-5xl mx-auto px-4 py-16 animate-pulse">
+            <section className="max-w-5xl w-full mx-auto px-4 py-16 animate-pulse">
                 <div className="grid md:grid-cols-2 gap-10 items-start">
                     {/* Descripción lado izquierdo */}
                     <div className="space-y-6">

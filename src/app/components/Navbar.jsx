@@ -49,7 +49,7 @@ export default function Navbar() {
           {/* Menú desktop */}
           <ul className="hidden md:flex space-x-6 items-center">
             <li><Link href="#about" className={`${isDark ? 'text-white' : 'text-black'} hover:underline`}>Nosotros</Link></li>
-            <li><Link href="#packages" className={`${isDark ? 'text-white' : 'text-black'} hover:underline`}>Paquetes</Link></li>
+            <li><Link href="/paquetes" className={`${isDark ? 'text-white' : 'text-black'} hover:underline`}>Paquetes</Link></li>
             <li><Link href="#contact" className={`${isDark ? 'text-white' : 'text-black'} hover:underline`}>Contacto</Link></li>
           </ul>
 

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Hero from '../components/Hero'
 import Image from 'next/image'
+import Link from 'next/link'
 
 export default function PaquetesPage() {
     const router = useRouter()
@@ -115,20 +116,20 @@ export default function PaquetesPage() {
     }
     function formatearFechaLarga(fechaIso) {
         const fecha = new Date(fechaIso);
-      
+
         const opciones = {
-          weekday: 'long',
-          day: 'numeric',
-          month: 'long',
-          year: 'numeric'
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
         };
-      
+
         const fechaFormateada = fecha.toLocaleDateString('es-AR', opciones);
-      
+
         // Capitalizar la primera letra
         return fechaFormateada.charAt(0).toUpperCase() + fechaFormateada.slice(1);
-      }
-      
+    }
+
     useEffect(() => {
         const toggleMenu = (id) => {
             const menu = document.getElementById(id)
@@ -341,13 +342,15 @@ export default function PaquetesPage() {
                                                             <p className="text-sm text-gray-600">
                                                                 <strong className="text-gray-800">Regreso:</strong> {formatearFechaLarga(trip.fechas[0].regreso)}
                                                             </p>
-                                                            <p className="text-sm text-gray-600">{trip.descripcion}</p>
                                                         </div>
                                                         <div className="flex items-center justify-between mt-4">
                                                             <p className="text-lg font-bold text-blue-900">${trip.precio}</p>
-                                                            <button className="bg-[rgb(43,52,71)] hover:cursor-pointer text-white px-4 py-2 text-sm rounded">
+                                                            <Link
+                                                                href={`/paquete/${trip.slug}`}
+                                                                className="bg-[rgb(43,52,71)] hover:bg-teal-600 text-white px-4 py-2 text-sm rounded transition"
+                                                            >
                                                                 Reservar
-                                                            </button>
+                                                            </Link>
                                                         </div>
                                                     </div>
                                                 </div>
