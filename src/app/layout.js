@@ -22,7 +22,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body
-        className="bg-gray-200"
+        className="bg-gray-200 min-h-screen flex flex-col"
       >
          <Navbar />
         {children}

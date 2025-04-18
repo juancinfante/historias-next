@@ -2,6 +2,7 @@ import Image from 'next/image'
 import React from 'react'
 
 export default async function Page({ params }) {
+    // 👇 Esto retrasa 3 segundos la carga
     const res = await fetch(`http://localhost:3000/api/trips/${params.slug}`, {
         cache: 'no-store'
     })

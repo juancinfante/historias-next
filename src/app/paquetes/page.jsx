@@ -346,7 +346,7 @@ export default function PaquetesPage() {
                                                         <div className="flex items-center justify-between mt-4">
                                                             <p className="text-lg font-bold text-blue-900">${trip.precio}</p>
                                                             <button className="bg-[rgb(43,52,71)] hover:cursor-pointer text-white px-4 py-2 text-sm rounded">
-                                                                Comprar
+                                                                Reservar
                                                             </button>
                                                         </div>
                                                     </div>

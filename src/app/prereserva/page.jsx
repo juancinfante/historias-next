@@ -163,7 +163,7 @@ export default function Page() {
             )}
 
             {loading && (
-                <section className="max-w-6xl mx-auto px-4 py-20 mt-[40px] animate-pulse">
+                <section className="max-w-6xl w-full mx-auto px-4 py-20 mt-[40px] animate-pulse">
                     <div className="grid md:grid-cols-3 gap-6">
                         <div className="md:col-span-2 space-y-4">
                             <div className="bg-white rounded-lg shadow p-4 flex gap-4 items-center">
