@@ -189,7 +189,7 @@ export default function PaquetesPage() {
                 </div>
             </header>
             <main className=" text-gray-800 bg-[rgb(245,247,249)] ">
-                <div className="max-w-7xl mx-auto px-4 py-6 mt-0 md:mt-[100px] ">
+                <div className="max-w-7xl mx-auto px-4 py-6 mt-0">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                         <aside className="md:block md:col-span-1">
                             <div id="filtros-activos" className="mb-2">
