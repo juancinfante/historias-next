@@ -3,9 +3,9 @@ import { ObjectId } from 'mongodb'
 import clientPromise from '../../../lib/mongodb'
 import { Trip } from '../../../models/trip'
 
-export async function GET(req: NextRequest, context: { params: { slug: string } }) {
+export async function GET(req: NextRequest, { params } : { params: Promise<{ slug: string }> }) {
   try {
-    const { slug } = context.params
+    const { slug } = await params;
 
     const client = await clientPromise
     const db = client.db('historias')
