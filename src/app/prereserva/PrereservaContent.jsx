@@ -75,8 +75,8 @@ export default function Page() {
             </header>
             {/* Cuerpo dinámico del viaje */}
             {trip && (
-                <section className="max-w-6xl mx-auto px-4 py-20 mt-[40px]">
-                    <div className="grid md:grid-cols-3 gap-6">
+                <section className="max-w-6xl w-full mx-auto px-4 py-20">
+                    <div className="grid md:grid-cols-3 md:gap-6">
                         <div className="md:col-span-2">
                             {/* Mobile resumen */}
                             <div className="block md:hidden bg-white rounded-lg shadow p-4 space-y-4 mb-6">
@@ -153,7 +153,7 @@ export default function Page() {
                             </div>
                             <a
                                 href={`/finalizar?s=${slug}&p=${cantidad}&f=${fechaIndex}`}
-                                className="w-full bg-[rgb(43,52,71)] hover:bg-teal-500 text-white font-semibold py-2 px-2 rounded-full transition"
+                                className="w-full bg-[rgb(43,52,71)] hover:bg-teal-500 text-white font-semibold py-2 px-4 rounded-lg transition"
                             >
                                 Finalizar compra
                             </a>
