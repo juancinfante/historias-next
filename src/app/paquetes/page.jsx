@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import Hero from '../components/Hero'
 import Image from 'next/image'
 import Link from 'next/link'
 
