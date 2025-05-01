@@ -50,7 +50,6 @@ export default function PaquetesContent() {
         try {
             const res = await fetch(`/api/trips?${params.toString()}&limit=10`)
             const data = await res.json()
-            console.log(data)
 
             let fetchedTrips = Array.isArray(data.data) ? data.data : []
 
@@ -328,7 +327,10 @@ export default function PaquetesContent() {
                                                     />
                                                     <div className="p-4 flex flex-col justify-between flex-grow">
                                                         <div>
-                                                            <h3 className="text-lg font-bold mb-1">{trip.nombre}</h3>
+                                                            <span className='w-full flex items-center justify-between'>
+                                                                <h3 className="text-lg font-bold mb-1">{trip.nombre}</h3>
+                                                                <span className="text-sm text-blue-500">Ultimos lugares!</span>
+                                                            </span>
                                                             <p className="text-sm text-gray-600">
                                                                 <strong className="text-gray-800">Destino:</strong> {trip.destino}
                                                             </p>
@@ -350,6 +352,7 @@ export default function PaquetesContent() {
                                                             >
                                                                 Reservar
                                                             </Link>
+                                                            <p>COMPLETO</p>
                                                         </div>
                                                     </div>
                                                 </div>

@@ -99,59 +99,18 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  try {
-    const client = await clientPromise
-    const db = client.db('historias')
-
-    const searchParams = req.nextUrl.searchParams
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '10')
-    const skip = (page - 1) * limit
-
-    // Total de reservas (para calcular páginas)
-    const total = await db.collection('reservas').countDocuments()
-
-    const reservas = await db.collection('reservas').aggregate([
-      {
-        $sort: { fechaReserva: -1 }
-      },
-      {
-        $skip: skip
-      },
-      {
-        $limit: limit
-      },
-      {
-        $lookup: {
-          from: 'trips',
-          localField: 'viajeId',
-          foreignField: '_id',
-          as: 'viaje'
-        }
-      },
-      {
-        $unwind: '$viaje'
-      },
-      {
-        $lookup: {
-          from: 'pasajeros',
-          localField: 'pasajeros',
-          foreignField: '_id',
-          as: 'pasajeros'
-        }
-      }
-    ]).toArray()
-
-    return NextResponse.json({
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit),
-      data: reservas
-    })
-
-  } catch (error) {
-    console.error('Error al obtener reservas:', error)
-    return NextResponse.json({ error: 'Error al obtener reservas' }, { status: 500 })
+  const codigo = req.nextUrl.searchParams.get('codigo')
+  if (!codigo) {
+    return NextResponse.json({ error: 'Código requerido' }, { status: 400 })
   }
+
+  const db = (await clientPromise).db('historias')
+  const reserva = await db.collection('reservas').findOne({ codigo })
+
+  if (!reserva) {
+    return NextResponse.json({ error: 'Reserva no encontrada' }, { status: 404 })
+  }
+
+  return NextResponse.json(reserva)
 }
+

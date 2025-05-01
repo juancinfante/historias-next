@@ -1,53 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { MongoClient } from 'mongodb'
 import clientPromise from '../../lib/mongodb'
-import { Trip } from '../../models/trip'
 
 const uri = process.env.MONGODB_URI as string
 const client = new MongoClient(uri)
-
-export async function POST(req: NextRequest) {
-    try {
-        const body = await req.json()
-        const { nombre, portada, destino, origen, fechas, incluye, noIncluye, precio, descripcion } = body as Trip
-
-        if (!nombre || !portada || !precio || !destino || !origen || !fechas?.length || descripcion) {
-            return NextResponse.json({ error: 'Faltan campos requeridos' }, { status: 400 })
-        }
-
-        await client.connect()
-        const db = client.db('historias') // usa el nombre por defecto de la URI
-        const trips = db.collection('trips')
-        const slug = nombre.toLowerCase().replace(/\s+/g, '-').normalize("NFD").replace(/[\u0300-\u036f]/g, '');
-
-        const newTrip = {
-            nombre,
-            portada,
-            destino,
-            origen,
-            precio,
-            fechas,
-            slug,
-            descripcion,
-            incluye: incluye || [],
-            noIncluye: noIncluye || [],
-            creadoEn: new Date()
-        }
-
-        const result = await trips.insertOne(newTrip)
-
-        return NextResponse.json({ _id: result.insertedId, ...newTrip }, { status: 201 })
-
-    } catch (error) {
-        console.error('Error creando viaje:', error)
-        return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
-    } finally {
-        await client.close()
-    }
-}
-
-
-
 
 export async function GET(req: NextRequest) {
     try {

@@ -2,6 +2,8 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation';
+
 
 export default function CompraContent() {
     const searchParams = useSearchParams()
@@ -11,6 +13,10 @@ export default function CompraContent() {
 
     const [trip, setTrip] = useState(null)
     const [loading, setLoading] = useState(true)
+    const [tipoPago, setTipoPago] = useState('total')
+    const [aceptaTerminos, setAceptaTerminos] = useState(false)
+    const [metodoPago, setMetodoPago] = useState('mercadopago')
+
 
     useEffect(() => {
         const fetchTrip = async () => {
@@ -27,6 +33,8 @@ export default function CompraContent() {
         fetchTrip()
     }, [slug])
 
+
+
     const formatear = (f) => new Date(f).toLocaleDateString('es-AR')
     let fecha, precioUnitario, subtotal
     if (trip) {
@@ -34,6 +42,88 @@ export default function CompraContent() {
         precioUnitario = trip.precio
         subtotal = precioUnitario * personas
     }
+    const router = useRouter();
+
+    async function handleReserva() {
+        if (!aceptaTerminos) {
+            alert('Debes aceptar los términos y condiciones para continuar.')
+            return
+        }
+        const form = document.getElementById('form-compra');
+        if (!form) return;
+
+        const campos = form.querySelectorAll('input[required], select[required], textarea[required]');
+
+        for (let campo of campos) {
+            if (!campo.value.trim()) {
+                alert('Por favor, completá todos los campos obligatorios.');
+                campo.focus();
+                return;
+            }
+        }
+
+        try {
+            const pasajeros = [];
+
+            const pasajeroDivs = form.querySelectorAll('.pasajero');
+
+            pasajeroDivs.forEach((pasajeroDiv) => {
+                const nombre = pasajeroDiv.querySelector('input[placeholder="Nombre *"]')?.value || "";
+                const apellido = pasajeroDiv.querySelector('input[placeholder="Apellidos *"]')?.value || "";
+                const tipoDocumento = pasajeroDiv.querySelector('select')?.value || "";
+                const numeroDocumento = pasajeroDiv.querySelector('input[placeholder="Número DNI o Pass *"]')?.value || "";
+                const email = pasajeroDiv.querySelector('input[type="email"]')?.value || "";
+                const telefono = pasajeroDiv.querySelector('input[type="tel"]')?.value || "";
+                const notas = pasajeroDiv.querySelector('textarea')?.value || "";
+
+                pasajeros.push({
+                    nombre,
+                    apellido,
+                    tipo_documento: tipoDocumento,
+                    numero_documento: numeroDocumento,
+                    email,
+                    telefono,
+                    notas,
+                });
+            });
+
+            const data = {
+                tripID: trip._id,
+                titulo: trip.nombre,
+                precio: tipoPago === 'reserva' ? subtotal * 0.3 : subtotal,
+                tipoPago, // 'total' o 'reserva'
+                pasajeros,
+                metodoPago,
+            }
+
+            const res = await fetch('/api/pagar', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            });
+
+            const result = await res.json();
+
+            if (metodoPago === 'mercadopago' && result.init_point) {
+                window.location.href = result.init_point;
+              } else if (metodoPago === 'transferencia' && result.codigo) {
+                // Redirige a la confirmación de reserva
+                router.push(`/confirmacion?id=${result.codigo}`);
+
+              } else {
+                alert('Error al procesar la reserva. Intenta de nuevo.');
+              }
+
+        } catch (error) {
+            console.error('Error al procesar el pago:', error);
+            alert('Error inesperado. Intenta nuevamente.');
+        }
+    }
+
+
+
 
     return (
         <>
@@ -124,7 +214,7 @@ export default function CompraContent() {
                             <div>
                                 <form id="form-compra" className="space-y-6">
                                     {[...Array(personas)].map((_, i) => (
-                                        <div key={i} className="border border-gray-300 p-4 rounded-md shadow-sm space-y-4 bg-white">
+                                        <div key={i} className="pasajero border border-gray-300 p-4 rounded-md shadow-sm space-y-4 bg-white">
                                             <h4 className="font-semibold text-gray-800">Pasajero {i + 1}</h4>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <input type="text" placeholder="Nombre *" className="border rounded px-4 py-2 w-full" required />
@@ -186,11 +276,50 @@ export default function CompraContent() {
                                     <span>Total</span>
                                     <span>${subtotal.toLocaleString('es-AR')}</span>
                                 </div>
+                                <div className="mt-4">
+                                    <h4 className="text-sm font-semibold mb-2">¿Cómo querés pagar?</h4>
+                                    <div className="flex gap-4">
+                                        <label className="flex items-center gap-2 cursor-pointer">
+                                            <input
+                                                type="radio"
+                                                name="tipoPago"
+                                                value="total"
+                                                checked={tipoPago === 'total'}
+                                                onChange={() => setTipoPago('total')}
+                                            />
+                                            Pago total
+                                        </label>
+                                        <label className="flex items-center gap-2 cursor-pointer">
+                                            <input
+                                                type="radio"
+                                                name="tipoPago"
+                                                value="reserva"
+                                                checked={tipoPago === 'reserva'}
+                                                onChange={() => setTipoPago('reserva')}
+                                            />
+                                            Reserva (30%)
+                                        </label>
+                                    </div>
+                                    
+                                    {tipoPago === 'reserva' && (
+                                        <div className="bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 p-4 mb-4 rounded">
+                                            <p className="font-semibold">Estás pagando una reserva (30%)</p>
+                                            <p>Monto a pagar ahora: <strong>${(subtotal * 0.3).toLocaleString('es-AR')}</strong></p>
+                                        </div>
+                                    )}
+                                </div>
 
                                 {/* Métodos de pago */}
                                 <div className="mt-6 space-y-4">
                                     <label className="flex items-start gap-4 p-4 border rounded cursor-pointer hover:shadow-sm">
-                                        <input type="radio" name="pago" defaultChecked className="mt-6 accent-blue-600" />
+                                        <input
+                                            type="radio"
+                                            name="pago"
+                                            value="mercadopago"
+                                            checked={metodoPago === 'mercadopago'}
+                                            onChange={() => setMetodoPago('mercadopago')}
+                                            className="mt-6 accent-blue-600"
+                                        />
                                         <div>
                                             <div className="font-semibold flex items-center gap-2">
                                                 <img src="https://dk0k1i3js6c49.cloudfront.net/iconos-pago/iconos-checkout/mercadopago-payment-icon.png" alt="" className="w-14" />
@@ -212,7 +341,14 @@ export default function CompraContent() {
                                         </div>
                                     </label>
                                     <label className="flex items-start gap-4 p-4 border rounded cursor-pointer hover:shadow-sm">
-                                        <input type="radio" name="pago" className="mt-6 accent-blue-600" />
+                                        <input
+                                            type="radio"
+                                            name="pago"
+                                            value="transferencia"
+                                            checked={metodoPago === 'transferencia'}
+                                            onChange={() => setMetodoPago('transferencia')}
+                                            className="mt-6 accent-blue-600"
+                                        />
                                         <div>
                                             <div className="font-semibold flex items-center gap-2">
                                                 <img src="https://dk0k1i3js6c49.cloudfront.net/iconos-pago/iconos-checkout/bank-payment-icon.png" alt="" className="w-14" />
@@ -221,32 +357,35 @@ export default function CompraContent() {
                                             </div>
                                         </div>
                                     </label>
+                                    {metodoPago === 'transferencia' && (
+                                        <div className="mt-4 border-l-4 border-blue-600 bg-blue-50 p-4 text-sm text-blue-800 rounded">
+                                            <p><strong>Cuenta bancaria para transferencias:</strong></p>
+                                            <p>Banco: Banco Nación</p>
+                                            <p>Alias: VIAJES.HISTORIAS.MP</p>
+                                            <p>CBU: 0110123456789012345678</p>
+                                            <p>CUIT: 20-12345678-9</p>
+                                            <p>Enviá el comprobante por WhatsApp luego de hacer la reserva.</p>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <p className="text-xs text-gray-500 mt-6">
                                     Tus datos personales se utilizarán para procesar tu pedido. Consulta nuestra <a href="#" className="underline">política de privacidad</a>.
                                 </p>
                                 <label className="inline-flex items-start gap-2 mt-4">
-                                    <input type="checkbox" className="form-checkbox mt-1" />
+                                    <input
+                                        type="checkbox"
+                                        className="form-checkbox mt-1"
+                                        checked={aceptaTerminos}
+                                        onChange={(e) => setAceptaTerminos(e.target.checked)}
+                                    />
                                     <span className="text-sm">Acepto los <a href="#" className="underline">términos y condiciones</a> *</span>
                                 </label>
+                                
+
                                 <button
                                     type="button"
-                                    onClick={() => {
-                                        const form = document.getElementById('form-compra')
-                                        const campos = form.querySelectorAll('input[required], select[required], textarea[required]')
-
-                                        for (let campo of campos) {
-                                            if (!campo.value.trim()) {
-                                                alert('Por favor, completá todos los campos obligatorios.')
-                                                campo.focus()
-                                                return
-                                            }
-                                        }
-
-                                        // Acá podrías hacer un fetch, mostrar loading, etc.
-                                        alert('Formulario válido, listo para enviar')
-                                    }}
+                                    onClick={() => handleReserva()}
                                     className="mt-6 w-full bg-[rgb(43,52,71)] text-white font-semibold py-2 rounded-full transition"
                                 >
                                     REALIZAR EL PEDIDO

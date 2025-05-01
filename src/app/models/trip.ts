@@ -14,6 +14,7 @@ export interface FechaViaje {
     noIncluye: string[]
     precio: number
     slug: string
-    creadoEn?: Date
+    createdAt?: Date
+    updatedAt?: Date
   }
   
