@@ -90,10 +90,10 @@ export default function CompraContent() {
             const data = {
                 tripID: trip._id,
                 titulo: trip.nombre,
-                precio: tipoPago === 'reserva' ? subtotal * 0.3 : subtotal,
-                tipoPago, // 'total' o 'reserva'
                 pasajeros,
                 metodoPago,
+                tipoPago, // 'total' o 'reserva'
+                precio: tipoPago === 'reserva' ? subtotal * 0.3 : subtotal,
             }
 
             const res = await fetch('/api/pagar', {

@@ -1,5 +1,6 @@
 export interface Reserva {
     tripID: string // ObjectId en string
+    titulo: string
     pasajeros: string[] // array de IDs de pasajeros
     metodoPago: 'mercadopago' | 'transferencia'
     tipoPago: 'total' | 'reserva'

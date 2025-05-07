@@ -44,6 +44,7 @@ export async function POST(req: NextRequest) {
 
       const nuevaReserva = {
         viajeId: tripID,
+        titulo,
         pasajeros,
         cantidad: pasajeros.length,
         metodoPago: 'transferencia',
@@ -58,8 +59,8 @@ export async function POST(req: NextRequest) {
 
       
       await sendTransferenciaEmail({
-        email: 'juaninfantejj@gmail.com',
-        nombrePasajero: 'Juan',
+        email: pasajeros[0].email,
+        nombrePasajero: pasajeros[0].nombre,
         codigo: codigo,
         precio: precio,
         tipoPago
