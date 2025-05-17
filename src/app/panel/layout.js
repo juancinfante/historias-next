@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 
 export default function AdminLayout({ children }) {
     return (
-            <div className="bg-gray-100 h-screen flex flex-col md:flex-row overflow-hidden">
+            <div>
                 {children} {/* Aquí se renderizará el contenido de las páginas del panel */}
             </div>
     );
