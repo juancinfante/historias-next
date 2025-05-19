@@ -27,7 +27,7 @@ export async function GET(req: NextRequest, { params } : { params: Promise<{ id:
 
 
 // PUT viaje por ID
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, { params } : { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
     if (!ObjectId.isValid(id)) {
@@ -53,7 +53,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 }
 
 // DELETE viaje por ID
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params } : { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
     if (!ObjectId.isValid(id)) {
