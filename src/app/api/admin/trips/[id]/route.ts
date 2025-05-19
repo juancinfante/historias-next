@@ -3,28 +3,27 @@ import clientPromise from '../../../../lib/mongodb'
 import { ObjectId } from 'mongodb'
 
 // GET viaje por ID
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params } : { params: Promise<{ id: string }> }) {
   try {
-    const { id } = await params
+    const { id } = await params;
     if (!ObjectId.isValid(id)) {
-      return NextResponse.json({ error: 'ID inválido' }, { status: 400 })
+      return NextResponse.json({ error: 'ID inválido' }, { status: 400 });
     }
 
-    const client = await clientPromise
-    const db = client.db('historias')
-    const trip = await db.collection('trips').findOne({ _id: new ObjectId(id) })
+    const client = await clientPromise;
+    const db = client.db('historias');
+    const trip = await db.collection('trips').findOne({ _id: new ObjectId(id) });
 
     if (!trip) {
-      return NextResponse.json({ error: 'Viaje no encontrado' }, { status: 404 })
+      return NextResponse.json({ error: 'Viaje no encontrado' }, { status: 404 });
     }
 
-    return NextResponse.json(trip)
+    return NextResponse.json(trip);
   } catch (error) {
-    console.error('GET error admin trip:', error)
-    return NextResponse.json({ error: 'Error del servidor' }, { status: 500 })
+    console.error('GET error admin trip:', error);
+    return NextResponse.json({ error: 'Error del servidor' }, { status: 500 });
   }
 }
-
 
 
 // PUT viaje por ID
