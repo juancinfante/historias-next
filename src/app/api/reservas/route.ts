@@ -97,20 +97,29 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Error en el servidor' }, { status: 500 })
     }
 }
-
 export async function GET(req: NextRequest) {
-  const codigo = req.nextUrl.searchParams.get('codigo')
-  if (!codigo) {
-    return NextResponse.json({ error: 'Código requerido' }, { status: 400 })
+  try {
+    const client = await clientPromise;
+    const db = client.db('historias');
+
+    // Usamos find() sin argumentos para obtener todos los documentos de la colección
+    // y luego .toArray() para convertir el cursor en un array de objetos.
+    const reservas = await db.collection('reservas').find({}).toArray();
+
+    // Si no se encuentra ninguna reserva, find().toArray() devolverá un array vacío.
+    // Puedes decidir si quieres un 404 aquí o simplemente un array vacío.
+    // Lo más común es devolver un array vacío si no hay resultados, no un 404.
+    if (!reservas || reservas.length === 0) {
+      // Puedes devolver un array vacío con status 200 si es el comportamiento deseado
+      // o un 404 si "no encontradas" significa que la colección no existe o un error.
+      // Para "todas las reservas", lo normal es [] y 200 OK.
+      return NextResponse.json([]); // Devuelve un array vacío si no hay reservas
+    }
+
+    return NextResponse.json(reservas);
+  } catch (error) {
+    console.error('GET error todas las reservas:', error);
+    // Devuelve un error 500 en caso de problemas con la base de datos o el servidor
+    return NextResponse.json({ error: 'Error interno del servidor al obtener las reservas' }, { status: 500 });
   }
-
-  const db = (await clientPromise).db('historias')
-  const reserva = await db.collection('reservas').findOne({ codigo })
-
-  if (!reserva) {
-    return NextResponse.json({ error: 'Reserva no encontrada' }, { status: 404 })
-  }
-
-  return NextResponse.json(reserva)
 }
-

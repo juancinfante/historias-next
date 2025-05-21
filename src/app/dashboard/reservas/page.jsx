@@ -13,149 +13,78 @@ import {
 } from "@/components/components/ui/sidebar"
 import { DataTable } from './data-table'
 import { columns } from './columns'
+// async function getData(){
+//   ¡Entendido! Para dejar de simular los datos y obtener las reservas directamente de tu API, simplemente necesitas hacer una llamada Workspace a tu endpoint /api/reservas.
 
-async function getData(){
-  // Fetch data from your API here.
-  return [
-  {
-    _id: "6812a7470bf5b260caccb8e1",
-    viajeId: "67f73e6ed4f9c49606ac0bc6",
-    pasajeros: [
-      {
-        nombre: "Juan Cruz",
-        apellido: "Infante",
-        tipo_documento: "DNI",
-        numero_documento: "12312323",
-        email: "juaninfantejj@gmail.com",
-        telefono: "03856137879",
-        notas: "asdasd"
+// Asumiendo que esta getData se encuentra en un Client Component (ya que la interacción con la API se hará en el navegador o en un entorno que soporta Workspace en el cliente), así es como se vería:
+
+// Función getData para Obtener Todas las Reservas
+// TypeScript
+
+// // Asegúrate de que este componente (o el archivo donde se use getData) sea un Client Component si está en Next.js App Router
+// // "use client";
+
+// import { NextResponse } from 'next/server'; // Aunque no se usa directamente aquí, puede que tu archivo lo necesite
+
+// // Define las interfaces para tipar los datos que esperas de la API
+// interface Pasajero {
+//   nombre: string;
+//   apellido: string;
+//   tipo_documento: string;
+//   numero_documento: string;
+//   email: string;
+//   telefono: string;
+//   notas: string;
+// }
+
+// interface Reserva {
+//   _id: string;
+//   viajeId: string;
+//   pasajeros: Pasajero[];
+//   cantidad: number;
+//   metodoPago: string;
+//   estado: string;
+//   fechaReserva: string;
+//   codigo: string;
+//   precio: number;
+//   tipoPago: string;
+// }
+
+export async function getData(){
+  try {
+    // Usa process.env.NEXT_PUBLIC_API_BASE_URL para construir la URL absoluta
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+    if (!baseUrl) {
+      throw new Error("NEXT_PUBLIC_API_BASE_URL no está definido en las variables de entorno.");
+    }
+
+    const response = await fetch(`${baseUrl}/api/reservas`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
       },
-      {
-        nombre: "Laura",
-        apellido: "Gómez",
-        tipo_documento: "DNI",
-        numero_documento: "33211234",
-        email: "laura@gmail.com",
-        telefono: "1123456789",
-        notas: "Vegetariana"
-      }
-    ],
-    cantidad: 2,
-    metodoPago: "efectivo",
-    estado: "pendiente",
-    fechaReserva: "2025-04-30T22:42:15.012Z",
-    codigo: "HXA255",
-    precio: 2000,
-    tipoPago: "total"
-  },
-  {
-    _id: "6812a7480bf5b260caccb8e2",
-    viajeId: "67f73e6ed4f9c49606ac0bc7",
-    pasajeros: [
-      {
-        nombre: "Carlos",
-        apellido: "Pérez",
-        tipo_documento: "DNI",
-        numero_documento: "44111222",
-        email: "carlos@gmail.com",
-        telefono: "1133344455",
-        notas: ""
-      }
-    ],
-    cantidad: 1,
-    metodoPago: "mercado pago",
-    estado: "confirmado",
-    fechaReserva: "2025-05-01T10:15:30.000Z",
-    codigo: "MBR812",
-    precio: 1200,
-    tipoPago: "seña"
-  },
-  {
-    _id: "6812a7490bf5b260caccb8e3",
-    viajeId: "67f73e6ed4f9c49606ac0bc8",
-    pasajeros: [
-      {
-        nombre: "Ana",
-        apellido: "López",
-        tipo_documento: "DNI",
-        numero_documento: "40123456",
-        email: "ana.lopez@gmail.com",
-        telefono: "1144455566",
-        notas: "Alergia a frutos secos"
-      },
-      {
-        nombre: "Martín",
-        apellido: "López",
-        tipo_documento: "DNI",
-        numero_documento: "40123457",
-        email: "martin.lopez@gmail.com",
-        telefono: "1144455577",
-        notas: ""
-      }
-    ],
-    cantidad: 2,
-    metodoPago: "transferencia",
-    estado: "pendiente",
-    fechaReserva: "2025-05-02T14:22:10.000Z",
-    codigo: "LZP390",
-    precio: 2200,
-    tipoPago: "total"
-  },
-  {
-    _id: "6812a7500bf5b260caccb8e4",
-    viajeId: "67f73e6ed4f9c49606ac0bc9",
-    pasajeros: [
-      {
-        nombre: "Sofía",
-        apellido: "Ramírez",
-        tipo_documento: "Pasaporte",
-        numero_documento: "P1234567",
-        email: "sofia@gmail.com",
-        telefono: "1155566677",
-        notas: ""
-      }
-    ],
-    cantidad: 1,
-    metodoPago: "efectivo",
-    estado: "confirmado",
-    fechaReserva: "2025-05-03T09:00:00.000Z",
-    codigo: "TRF710",
-    precio: 1800,
-    tipoPago: "total"
-  },
-  {
-    _id: "6812a7510bf5b260caccb8e5",
-    viajeId: "67f73e6ed4f9c49606ac0bd0",
-    pasajeros: [
-      {
-        nombre: "Lucía",
-        apellido: "Fernández",
-        tipo_documento: "DNI",
-        numero_documento: "39001122",
-        email: "lucia@gmail.com",
-        telefono: "1166677788",
-        notas: "Silla de ruedas"
-      },
-      {
-        nombre: "Elena",
-        apellido: "Fernández",
-        tipo_documento: "DNI",
-        numero_documento: "39001123",
-        email: "elena@gmail.com",
-        telefono: "1166677789",
-        notas: ""
-      }
-    ],
-    cantidad: 2,
-    metodoPago: "mercado pago",
-    estado: "pendiente",
-    fechaReserva: "2025-05-04T18:30:00.000Z",
-    codigo: "FER904",
-    precio: 2500,
-    tipoPago: "seña"
+      cache: 'no-store'
+    });
+
+    // Verifica si la respuesta fue exitosa (código de estado 2xx)
+    if (!response.ok) {
+      // Si la API devuelve un error (ej. 500), lanza un error para manejarlo.
+      const errorData = await response.json();
+      throw new Error(errorData.error || `Error HTTP: ${response.status}`);
+    }
+
+    // Parsea la respuesta JSON en un array de objetos Reserva
+    const reservas = await response.json();
+    return reservas;
+
+  } catch (error) {
+    console.error('Error al obtener las reservas:', error);
+    // Puedes lanzar el error o devolver un array vacío / un error específico según tu lógica de UI
+    throw error; // Re-lanza el error para que el componente que llama a getData pueda manejarlo
+    // return []; // O podrías devolver un array vacío si prefieres no lanzar un error en este punto.
   }
-];
 }
+
 
 export default async function page()  {
 
