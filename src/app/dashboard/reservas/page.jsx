@@ -1,4 +1,6 @@
-import React from 'react'
+"use client" // <--- ¡IMPORTANTE! Marca este archivo como Client Component
+
+import React, { useState, useEffect, useCallback } from 'react' // Importa hooks necesarios
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -12,83 +14,78 @@ import {
   SidebarTrigger,
 } from "@/components/components/ui/sidebar"
 import { DataTable } from './data-table'
-import { columns } from './columns'
-// async function getData(){
-//   ¡Entendido! Para dejar de simular los datos y obtener las reservas directamente de tu API, simplemente necesitas hacer una llamada Workspace a tu endpoint /api/reservas.
+import { columns } from './columns' // Asegúrate que este path sea correcto
+import { Loader2 } from 'lucide-react'
 
-// Asumiendo que esta getData se encuentra en un Client Component (ya que la interacción con la API se hará en el navegador o en un entorno que soporta Workspace en el cliente), así es como se vería:
+export default function ReservasPage() { // Cambiado a un Client Component
+  const [data, setData] = useState([]); // Estado para tus datos de reservas
+  const [isLoading, setIsLoading] = useState(true); // Estado para el indicador de carga
+  const [error, setError] = useState(null); // Estado para manejar errores
 
-// Función getData para Obtener Todas las Reservas
-// TypeScript
+  // Función para obtener los datos de las reservas
+  // Usamos useCallback para que esta función no cambie en cada render si no es necesario,
+  // lo cual es bueno cuando se pasa como prop.
+  const fetchReservas = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+      if (!baseUrl) {
+        throw new Error("NEXT_PUBLIC_API_BASE_URL no está definido en las variables de entorno.");
+      }
 
-// // Asegúrate de que este componente (o el archivo donde se use getData) sea un Client Component si está en Next.js App Router
-// // "use client";
+      const response = await fetch(`${baseUrl}/api/reservas`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        // cache: 'no-store' // No es necesario aquí si fetch se hace en el cliente
+      });
 
-// import { NextResponse } from 'next/server'; // Aunque no se usa directamente aquí, puede que tu archivo lo necesite
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Error HTTP: ${response.status}`);
+      }
 
-// // Define las interfaces para tipar los datos que esperas de la API
-// interface Pasajero {
-//   nombre: string;
-//   apellido: string;
-//   tipo_documento: string;
-//   numero_documento: string;
-//   email: string;
-//   telefono: string;
-//   notas: string;
-// }
-
-// interface Reserva {
-//   _id: string;
-//   viajeId: string;
-//   pasajeros: Pasajero[];
-//   cantidad: number;
-//   metodoPago: string;
-//   estado: string;
-//   fechaReserva: string;
-//   codigo: string;
-//   precio: number;
-//   tipoPago: string;
-// }
-
-export async function getData(){
-  try {
-    // Usa process.env.NEXT_PUBLIC_API_BASE_URL para construir la URL absoluta
-    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-    if (!baseUrl) {
-      throw new Error("NEXT_PUBLIC_API_BASE_URL no está definido en las variables de entorno.");
+      const reservas = await response.json();
+      setData(reservas);
+    } catch (err) {
+      console.error('Error al obtener las reservas:', err);
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
     }
+  }, []); // El array de dependencias vacío significa que esta función solo se crea una vez
 
-    const response = await fetch(`${baseUrl}/api/reservas`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      cache: 'no-store'
-    });
+  // Ejecuta fetchReservas cuando el componente se monta por primera vez
+  useEffect(() => {
+    fetchReservas();
+  }, [fetchReservas]); // Dependencia de fetchReservas
 
-    // Verifica si la respuesta fue exitosa (código de estado 2xx)
-    if (!response.ok) {
-      // Si la API devuelve un error (ej. 500), lanza un error para manejarlo.
-      const errorData = await response.json();
-      throw new Error(errorData.error || `Error HTTP: ${response.status}`);
-    }
 
-    // Parsea la respuesta JSON en un array de objetos Reserva
-    const reservas = await response.json();
-    return reservas;
+  
 
-  } catch (error) {
-    console.error('Error al obtener las reservas:', error);
-    // Puedes lanzar el error o devolver un array vacío / un error específico según tu lógica de UI
-    throw error; // Re-lanza el error para que el componente que llama a getData pueda manejarlo
-    // return []; // O podrías devolver un array vacío si prefieres no lanzar un error en este punto.
+  // Pasa la función `WorkspaceReservas` a la función `columns`
+  // Esto permite que el componente de acción en 'columns.js' la llame
+  const reservationColumns = columns(fetchReservas);
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-1 flex-col gap-4 p-4 pt-0 items-center justify-center h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <p>Cargando reservas...</p>
+      </div>
+    );
   }
-}
 
-
-export default async function page()  {
-
-  const data = await getData()
+  if (error) {
+    return (
+      <div className="flex flex-1 flex-col gap-4 p-4 pt-0 items-center justify-center h-screen text-red-500">
+        <p>Error al cargar las reservas: {error}</p>
+        <Button onClick={fetchReservas}>Reintentar</Button>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -108,20 +105,16 @@ export default async function page()  {
               </BreadcrumbItem>
               <BreadcrumbSeparator className="hidden md:block" />
               <BreadcrumbItem>
-                {/* <BreadcrumbPage>Data Fetching</BreadcrumbPage> */}
+                {/* Si tienes alguna página actual o sub-ruta específica */}
+                {/* <BreadcrumbPage>Detalles</BreadcrumbPage> */}
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
         </div>
       </header>
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-      <DataTable columns={columns} data={data} />
-        {/* <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-          <div className="bg-muted/50 aspect-video rounded-xl" />
-          <div className="bg-muted/50 aspect-video rounded-xl" />
-          <div className="bg-muted/50 aspect-video rounded-xl" />
-        </div>
-        <div className="bg-muted/50 min-h-[100vh] flex-1 rounded-xl md:min-h-min" /> */}
+        {/* Pasa las columnas configuradas con la función de recarga */}
+        <DataTable columns={reservationColumns} data={data} />
       </div>
     </>
   )

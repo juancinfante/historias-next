@@ -20,6 +20,7 @@ import {
 } from "@/components/components/ui/table"
 import { Button } from "@/components/components/ui/button"
 import { Input } from "@/components/components/ui/input"
+import ModalNuevaReserva  from "@/components/ModalNuevaReserva"
 import {
     DropdownMenu,
     DropdownMenuCheckboxItem,
@@ -27,12 +28,6 @@ import {
     DropdownMenuTrigger,
 } from "@/components/components/ui/dropdown-menu"
 import React, { useState } from "react"
-
-// interface DataTableProps<TData, TValue> {
-//   columns: ColumnDef<TData, TValue>[]
-//   data: TData[]
-// }
-
 
 // export function DataTable<TData, TValue>({ columns, data,}: DataTableProps<TData, TValue>) {
 export function DataTable({ columns, data, }) {
@@ -94,6 +89,8 @@ export function DataTable({ columns, data, }) {
               })}
           </DropdownMenuContent>
         </DropdownMenu>
+            <ModalNuevaReserva  onSuccess={() => table.reset()} />
+
             </div>
             <div className="rounded-md border">
                 <Table>
