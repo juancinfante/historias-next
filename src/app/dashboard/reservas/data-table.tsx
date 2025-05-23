@@ -54,17 +54,25 @@ export function DataTable({ columns, data, }) {
         <div>
             <div className="flex items-center py-4">
                 <Input
-                    placeholder="Filter emails..."
+                    placeholder="Buscar por codigo.."
                     value={(table.getColumn("codigo")?.getFilterValue() as string) ?? ""}
                     onChange={(event) =>
                         table.getColumn("codigo")?.setFilterValue(event.target.value)
                     }
                     className="max-w-sm"
                 />
+                <Input
+                    placeholder="Buscar por destino.."
+                    value={(table.getColumn("titulo")?.getFilterValue() as string) ?? ""}
+                    onChange={(event) =>
+                        table.getColumn("titulo")?.setFilterValue(event.target.value)
+                    }
+                    className="max-w-sm"
+                />
                 <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="ml-auto">
-              Columns
+              Columnas
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
@@ -90,7 +98,6 @@ export function DataTable({ columns, data, }) {
           </DropdownMenuContent>
         </DropdownMenu>
             <ModalNuevaReserva  onSuccess={() => table.reset()} />
-
             </div>
             <div className="rounded-md border">
                 <Table>

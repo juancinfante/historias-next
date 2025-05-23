@@ -1,6 +1,6 @@
 "use client"
 
-import { CheckCircle2Icon, LoaderIcon, MoreHorizontal, Landmark, Handshake, Banknote, Loader2, Pencil, X } from "lucide-react"
+import { CheckCircle2Icon, LoaderIcon, MoreHorizontal, Landmark, Handshake, Banknote, Loader2, Pencil, X, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/components/ui/button"
 import { Badge } from "@/components/components/ui/badge"
@@ -84,7 +84,7 @@ export const columns = (onRefreshData) => [ // MODIFICADO: Ahora 'columns' es un
     header: "Fecha de Reserva",
   },
   {
-    id: "actions",
+    header: "Ver/Editar",
     cell: ({ row }) => {
       const payment = row.original
 
@@ -209,6 +209,12 @@ export const columns = (onRefreshData) => [ // MODIFICADO: Ahora 'columns' es un
               <div className="relative bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-xl max-h-[90vh] flex flex-col">
                 <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
                   <h2 className="text-xl font-semibold">Detalles de la Reserva: {reserva.codigo}</h2>
+                  <button
+                    onClick={() => setIsModalOpen(false)}
+                    className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  >
+                    &times;
+                  </button>
                   <button
                     onClick={() => setIsModalOpen(false)}
                     className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
@@ -346,4 +352,65 @@ export const columns = (onRefreshData) => [ // MODIFICADO: Ahora 'columns' es un
       )
     },
   },
+  {
+  header: "Eliminar", // Encabezado de la columna
+  id: "delete-action", // Un ID único para esta columna
+  cell: ({ row, table }) => {
+    const reserva = row.original; // Accede a los datos de la fila (la reserva)
+    const [isDeleting, setIsDeleting] = useState(false); // Estado para el loader del botón
+
+    const handleDeleteReserva = async (reservaId) => {
+      // Muestra un cuadro de diálogo de confirmación antes de eliminar
+      if (!confirm("¿Estás seguro de que quieres eliminar esta reserva? Esta acción es irreversible.")) {
+        return; // Si el usuario cancela, no hacemos nada
+      }
+
+      setIsDeleting(true); // Activa el loader del botón
+      try {
+        const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+        if (!baseUrl) {
+          throw new Error("NEXT_PUBLIC_API_BASE_URL no está definido en las variables de entorno.");
+        }
+
+        const res = await fetch(`${baseUrl}/api/reservas/${reservaId}`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+        });
+
+        if (!res.ok) {
+          // Si la respuesta no es OK, intenta leer el mensaje de error del backend
+          const errorData = await res.json();
+          throw new Error(errorData.error || 'Error al eliminar la reserva');
+        }
+
+        // Si la eliminación fue exitosa
+        if (onRefreshData) {
+          onRefreshData(); // Llama a la función para refrescar los datos de la tabla
+        }
+        
+      } catch (err) {
+        console.error("Error al eliminar reserva:", err);
+        // Muestra un mensaje de error al usuario
+        toast.error(err.message || "Error al eliminar la reserva.");
+      } finally {
+        setIsDeleting(false); // Desactiva el loader del botón, sin importar el resultado
+      }
+    };
+
+    return (
+      <Button
+        variant="destructive" // Estilo para botones de eliminar (Shadcn UI)
+        size="sm"
+        onClick={() => handleDeleteReserva(reserva._id)} // Pasa el ID de la reserva a la función
+        disabled={isDeleting} // Deshabilita el botón mientras se está procesando la eliminación
+      >
+        {isDeleting ? (
+          <Loader2 className="h-4 w-4 animate-spin" /> // Muestra un loader si está eliminando
+        ) : (
+          <Trash2 className="h-4 w-4" /> // Ícono de bote de basura
+        )}
+      </Button>
+    );
+  },
+},
 ];

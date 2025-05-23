@@ -7,17 +7,20 @@ import { Label } from "@/components/components/ui/label";
 import { toast } from "sonner";
 import { Loader2, PlusCircle, X } from "lucide-react";
 
-export default function NuevoModalReserva({ tripID = "abc123", onSuccess }) {
+export default function NuevoModalReserva({ onSuccess }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [tripID, setTripID] = useState('');
 
   const [nuevaReserva, setNuevaReserva] = useState({
     titulo: '',
     precio: '',
-    metodoPago: '',
-    tipoPago: '',
+    metodoPago: 'efectivo',
+    tipoPago: 'total',
+    estado: 'pagado',
     pasajeros: [{
       nombre: '',
+      apellido: '',
       email: '',
       tipo_documento: '',
       numero_documento: '',
@@ -42,7 +45,8 @@ export default function NuevoModalReserva({ tripID = "abc123", onSuccess }) {
     setNuevaReserva((prev) => ({
       ...prev,
       pasajeros: [...prev.pasajeros, {
-        nombre: '', apellido: '',
+        nombre: '', 
+        apellido: '',
         email: '',
         tipo_documento: '',
         numero_documento: '',
@@ -87,15 +91,16 @@ export default function NuevoModalReserva({ tripID = "abc123", onSuccess }) {
       });
       if (!res.ok) throw new Error('Error al crear la reserva');
       const data = await res.json();
-      toast.success(`Reserva creada - Código: ${data.codigo ?? 'confirmado'}`);
       setIsOpen(false);
       setNuevaReserva({
         titulo: '',
         precio: '',
-        metodoPago: 'efectivo',
-        tipoPago: 'total',
+        metodoPago: '',
+        tipoPago: '',
+        estado: '',
         pasajeros: [{
-          nombre: '', apellido: '',
+          nombre: '',
+          apellido: '',
           email: '',
           tipo_documento: '',
           numero_documento: '',
@@ -143,7 +148,7 @@ export default function NuevoModalReserva({ tripID = "abc123", onSuccess }) {
                 >
                   <option value="">Selecciona un viaje</option>
                   {viajes.map((viaje) => (
-                    <option key={viaje._id} value={viaje._id}>
+                    <option key={viaje._id} value={viaje._id} onChange={setTripID(viaje._id)}>
                       {viaje.nombre}
                     </option>
                   ))}
@@ -157,8 +162,8 @@ export default function NuevoModalReserva({ tripID = "abc123", onSuccess }) {
                 <Label htmlFor="metodoPago">Método de Pago</Label>
                 <select id="metodoPago" value={nuevaReserva.metodoPago} onChange={handleChange} className="w-full border rounded p-2">
                   <option value="efectivo">Efectivo</option>
-                  <option value="mercado pago">Mercado Pago</option>
                   <option value="transferencia">Transferencia</option>
+                  <option value="mercado pago">Mercado Pago</option>
                 </select>
               </div>
               <div>
@@ -166,6 +171,13 @@ export default function NuevoModalReserva({ tripID = "abc123", onSuccess }) {
                 <select id="tipoPago" value={nuevaReserva.tipoPago} onChange={handleChange} className="w-full border rounded p-2">
                   <option value="total">Total</option>
                   <option value="reserva">Reserva</option>
+                </select>
+              </div>
+              <div>
+                <Label htmlFor="estado">Estado</Label>
+                <select id="estado" value={nuevaReserva.estado} onChange={handleChange} className="w-full border rounded p-2">
+                  <option value="pagado">Pagado</option>
+                  <option value="pendiente">Pendiente</option>
                 </select>
               </div>
 

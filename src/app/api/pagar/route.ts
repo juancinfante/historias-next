@@ -35,9 +35,9 @@ async function generarCodigoUnico(db): Promise<string> {
 
 export async function POST(req: NextRequest) {
   try {
-    const { titulo, pasajeros, precio, tipoPago, metodoPago, tripID } = await req.json();
+    const { titulo, pasajeros, precio, tipoPago, metodoPago, tripID, estado } = await req.json();
 
-    if (metodoPago === 'transferencia') {
+    if (metodoPago === 'transferencia' || metodoPago === 'efectivo' || metodoPago === 'mercado pago') {
       
       // Creamos una reserva pendiente
       const codigo = await generarCodigoUnico(db);
@@ -47,8 +47,8 @@ export async function POST(req: NextRequest) {
         titulo,
         pasajeros,
         cantidad: pasajeros.length,
-        metodoPago: 'transferencia',
-        estado: 'pendiente',
+        metodoPago: metodoPago,
+        estado: estado,
         fechaReserva: new Date(),
         codigo,
         precio,
