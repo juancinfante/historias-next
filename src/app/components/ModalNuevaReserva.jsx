@@ -19,7 +19,7 @@ export default function NuevoModalReserva({ onSuccess }) {
     tipoPago: 'total',
     estado: 'pagado',
     pasajeros: [{
-      nombre: '',
+      nombre: '', 
       apellido: '',
       email: '',
       tipo_documento: '',
@@ -64,20 +64,20 @@ export default function NuevoModalReserva({ onSuccess }) {
 
   const [viajes, setViajes] = useState([]);
   
-    useEffect(() => {
-      const fetchViajes = async () => {
-        try {
-          const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-          const res = await fetch(`${baseUrl}/api/trips`);
-          const data = await res.json();
-          setViajes(data.data);
-        } catch (err) {
-          console.error("Error al obtener viajes:", err);
-        }
-      };
-  
-      fetchViajes();
-    }, []);
+  useEffect(() => {
+    const fetchViajes = async () => {
+      try {
+        const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+        const res = await fetch(`${baseUrl}/api/trips`);
+        const data = await res.json();
+        setViajes(data.data);
+      } catch (err) {
+        console.error("Error al obtener viajes:", err);
+      }
+    };
+
+    fetchViajes();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -137,18 +137,20 @@ export default function NuevoModalReserva({ onSuccess }) {
                 <select
                   id="tripID"
                   value={nuevaReserva.tripID || ''}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const selectedTripId = e.target.value;
+                    setTripID(selectedTripId); // Update tripID state
                     setNuevaReserva((prev) => ({
                       ...prev,
-                      tripID: e.target.value,
-                      titulo: viajes.find((v) => v._id === e.target.value)?.nombre || '',
+                      tripID: selectedTripId,
+                      titulo: viajes.find((v) => v._id === selectedTripId)?.nombre || '',
                     }))
-                  }
+                  }}
                   className="w-full border rounded p-2"
                 >
                   <option value="">Selecciona un viaje</option>
                   {viajes.map((viaje) => (
-                    <option key={viaje._id} value={viaje._id} onChange={setTripID(viaje._id)}>
+                    <option key={viaje._id} value={viaje._id}>
                       {viaje.nombre}
                     </option>
                   ))}

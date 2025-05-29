@@ -16,6 +16,8 @@ import {
 import { DataTable } from './data-table'
 import { columns } from './columns' // Asegúrate que este path sea correcto
 import { Loader2 } from 'lucide-react'
+import ModalNuevaReserva from "@/components/ModalNuevaReserva"
+
 
 export default function ReservasPage() { // Cambiado a un Client Component
   const [data, setData] = useState([]); // Estado para tus datos de reservas
@@ -114,6 +116,9 @@ export default function ReservasPage() { // Cambiado a un Client Component
       </header>
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
         {/* Pasa las columnas configuradas con la función de recarga */}
+        <div className="flex w-full justify-end">
+                <ModalNuevaReserva onSuccess={() => fetchReservas()} />
+        </div>
         <DataTable columns={reservationColumns} data={data} />
       </div>
     </>
