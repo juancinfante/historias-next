@@ -126,12 +126,13 @@ export default function NuevoModalReserva({ onSuccess }) {
 
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-lg">
+          <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-lg flex flex-col max-h-[90vh]">
             <div className="flex justify-between items-center p-4 border-b">
               <h2 className="text-xl font-semibold">Crear Reserva</h2>
               <button onClick={() => setIsOpen(false)}>&times;</button>
             </div>
-            <form onSubmit={handleSubmit} className="p-4 space-y-4">
+            {/* Aquí aplicamos las clases de scroll */}
+            <form onSubmit={handleSubmit} className="p-4 space-y-4 overflow-y-auto flex-grow" id="reserva-form"> {/* AÑADIDO: id="reserva-form" */}
               <div>
                 <Label htmlFor="tripID">Viaje</Label>
                 <select
@@ -250,18 +251,17 @@ export default function NuevoModalReserva({ onSuccess }) {
                   Agregar pasajero
                 </Button>
               </div>
-
-
-              <div className="flex justify-end gap-2 pt-4 border-t">
-                <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
-                  Cancelar
-                </Button>
-                <Button type="submit" disabled={isLoading}>
-                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Guardar
-                </Button>
-              </div>
             </form>
+
+            <div className="flex justify-end gap-2 pt-4 border-t p-4">
+              <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={isLoading} form="reserva-form"> {/* MODIFICADO: Agregado form="reserva-form" */}
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Guardar
+              </Button>
+            </div>
           </div>
         </div>
       )}
