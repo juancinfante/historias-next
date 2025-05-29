@@ -20,7 +20,6 @@ import {
 } from "@/components/components/ui/table"
 import { Button } from "@/components/components/ui/button"
 import { Input } from "@/components/components/ui/input"
-import ModalNuevaReserva  from "@/components/ModalNuevaReserva"
 import {
     DropdownMenu,
     DropdownMenuCheckboxItem,
@@ -97,7 +96,6 @@ export function DataTable({ columns, data, }) {
               })}
           </DropdownMenuContent>
         </DropdownMenu>
-            <ModalNuevaReserva  onSuccess={() => table.reset()} />
             </div>
             <div className="rounded-md border">
                 <Table>

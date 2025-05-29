@@ -7,6 +7,17 @@ import { Badge } from "@/components/components/ui/badge"
 import { Input } from "@/components/components/ui/input"
 import { Label } from "@/components/components/ui/label"
 import { useState } from "react"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/components/ui/alert-dialog"
 
 // La función 'onRefreshData' se pasa como un argumento a la función de columnas
 // Esto permite que el componente que define las columnas reciba una función para recargar datos
@@ -352,20 +363,82 @@ export const columns = (onRefreshData) => [ // MODIFICADO: Ahora 'columns' es un
       )
     },
   },
-  {
-  header: "Eliminar", // Encabezado de la columna
-  id: "delete-action", // Un ID único para esta columna
+//   {
+//   header: "Eliminar", // Encabezado de la columna
+//   id: "delete-action", // Un ID único para esta columna
+//   cell: ({ row, table }) => {
+//     const reserva = row.original; // Accede a los datos de la fila (la reserva)
+//     const [isDeleting, setIsDeleting] = useState(false); // Estado para el loader del botón
+
+//     const handleDeleteReserva = async (reservaId) => {
+//       // Muestra un cuadro de diálogo de confirmación antes de eliminar
+//       if (!confirm("¿Estás seguro de que quieres eliminar esta reserva? Esta acción es irreversible.")) {
+//         return; // Si el usuario cancela, no hacemos nada
+//       }
+
+//       setIsDeleting(true); // Activa el loader del botón
+//       try {
+//         const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+//         if (!baseUrl) {
+//           throw new Error("NEXT_PUBLIC_API_BASE_URL no está definido en las variables de entorno.");
+//         }
+
+//         const res = await fetch(`${baseUrl}/api/reservas/${reservaId}`, {
+//           method: 'DELETE',
+//           headers: { 'Content-Type': 'application/json' },
+//         });
+
+//         if (!res.ok) {
+//           // Si la respuesta no es OK, intenta leer el mensaje de error del backend
+//           const errorData = await res.json();
+//           throw new Error(errorData.error || 'Error al eliminar la reserva');
+//         }
+
+//         // Si la eliminación fue exitosa
+//         if (onRefreshData) {
+//           onRefreshData(); // Llama a la función para refrescar los datos de la tabla
+//         }
+        
+//       } catch (err) {
+//         console.error("Error al eliminar reserva:", err);
+//         // Muestra un mensaje de error al usuario
+//         toast.error(err.message || "Error al eliminar la reserva.");
+//       } finally {
+//         setIsDeleting(false); // Desactiva el loader del botón, sin importar el resultado
+//       }
+//     };
+
+//     return (
+//       <Button
+//         variant="destructive" // Estilo para botones de eliminar (Shadcn UI)
+//         size="sm"
+//         onClick={() => handleDeleteReserva(reserva._id)} // Pasa el ID de la reserva a la función
+//         disabled={isDeleting} // Deshabilita el botón mientras se está procesando la eliminación
+//       >
+//         {isDeleting ? (
+//           <Loader2 className="h-4 w-4 animate-spin" /> // Muestra un loader si está eliminando
+//         ) : (
+//           <Trash2 className="h-4 w-4" /> // Ícono de bote de basura
+//         )}
+//       </Button>
+//     );
+//   },
+// },
+{ // Le doy un nombre a la constante de la columna
+  header: "Eliminar",
+  id: "delete-action",
   cell: ({ row, table }) => {
-    const reserva = row.original; // Accede a los datos de la fila (la reserva)
-    const [isDeleting, setIsDeleting] = useState(false); // Estado para el loader del botón
+    const reserva = row.original;
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    // Necesitamos pasar la función onRefreshData desde el componente padre
+    // Asumo que el `table` objeto o las propiedades del `cell` pueden tener una forma de acceder a esto.
+    // Si no, tendrás que pasar `onRefreshData` como una prop a la `DataTable` y luego a las `columns`.
+    // Por simplicidad, asumiré que se puede acceder como `table.options.meta?.onRefreshData`
+    // (Esta es una convención común si usas TanStack Table con `meta` en sus opciones).
 
     const handleDeleteReserva = async (reservaId) => {
-      // Muestra un cuadro de diálogo de confirmación antes de eliminar
-      if (!confirm("¿Estás seguro de que quieres eliminar esta reserva? Esta acción es irreversible.")) {
-        return; // Si el usuario cancela, no hacemos nada
-      }
-
-      setIsDeleting(true); // Activa el loader del botón
+      setIsDeleting(true);
       try {
         const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
         if (!baseUrl) {
@@ -378,39 +451,56 @@ export const columns = (onRefreshData) => [ // MODIFICADO: Ahora 'columns' es un
         });
 
         if (!res.ok) {
-          // Si la respuesta no es OK, intenta leer el mensaje de error del backend
           const errorData = await res.json();
           throw new Error(errorData.error || 'Error al eliminar la reserva');
         }
 
-        // Si la eliminación fue exitosa
+        toast.success("Reserva eliminada exitosamente.");
         if (onRefreshData) {
           onRefreshData(); // Llama a la función para refrescar los datos de la tabla
         }
-        
       } catch (err) {
         console.error("Error al eliminar reserva:", err);
-        // Muestra un mensaje de error al usuario
         toast.error(err.message || "Error al eliminar la reserva.");
       } finally {
-        setIsDeleting(false); // Desactiva el loader del botón, sin importar el resultado
+        setIsDeleting(false);
       }
     };
 
     return (
-      <Button
-        variant="destructive" // Estilo para botones de eliminar (Shadcn UI)
-        size="sm"
-        onClick={() => handleDeleteReserva(reserva._id)} // Pasa el ID de la reserva a la función
-        disabled={isDeleting} // Deshabilita el botón mientras se está procesando la eliminación
-      >
-        {isDeleting ? (
-          <Loader2 className="h-4 w-4 animate-spin" /> // Muestra un loader si está eliminando
-        ) : (
-          <Trash2 className="h-4 w-4" /> // Ícono de bote de basura
-        )}
-      </Button>
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button
+            variant="destructive"
+            size="sm"
+            disabled={isDeleting}
+          >
+            {isDeleting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Trash2 className="h-4 w-4" />
+            )}
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás absolutamente seguro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Esto eliminará permanentemente la reserva seleccionada.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => handleDeleteReserva(reserva._id)} // <-- Llama la función de eliminación aquí
+              disabled={isDeleting} // Opcional: deshabilita el botón de acción mientras elimina
+            >
+              Continuar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     );
   },
-},
+}
 ];
