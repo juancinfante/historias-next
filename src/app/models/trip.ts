@@ -12,6 +12,8 @@ export interface FechaViaje {
     fechas: FechaViaje[]
     incluye: string[]
     noIncluye: string[]
+    faq: string[]
+    galeria: []
     precio: number
     slug: string
     createdAt?: Date
