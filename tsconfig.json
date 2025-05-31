@@ -33,7 +33,7 @@
     ".next/types/**/*.ts",
     "**/*.ts",
     "**/*.tsx"
-, "src/app/dashboard/reservas/columns.jsx", "src/app/dashboard/reservas/page.jsx", "src/app/dashboard/reservas/data-table.jsx"  ],
+, "src/app/dashboard/reservas/columns.jsx", "src/app/dashboard/reservas/page.jsx", "src/app/dashboard/reservas/data-table.jsx", "src/app/dashboard/viajes/[id]/page.jsx"  ],
   "exclude": [
     "node_modules"
   ]

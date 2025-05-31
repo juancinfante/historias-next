@@ -15,31 +15,28 @@ import { DataTable } from "./data-table"
 import { columns } from "./colmuns"
 
 async function getData() {
-    // Fetch data from your API here.
-    return [
-        {
-            id: "728ed52f",
-            nombre: "Tilcara",
-            origen: "Santiago del Estero",
-            destino: "pending",
-            precio: "350000",
-        },
-        {
-            id: "asdas312312",
-            nombre: "Brasil",
-            origen: "Cordoba",
-            destino: "pending",
-            precio: "250000",
-        },
-        {
-            id: "123qweqweqw",
-            nombre: "Sumampa",
-            origen: "Santiago del Estero",
-            destino: "pending",
-            precio: "650000",
-        },
-        // ...
-    ]
+    try {
+        // Realiza la llamada a tu API.
+        // Asegúrate de que la URL sea la correcta para tu entorno.
+        // Si estás en desarrollo, podría ser http://localhost:3000/api/trips
+        // En producción, debería ser tu dominio/api/trips
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/trips`, {
+            cache: 'no-store' // Esto asegura que los datos se obtengan en cada solicitud SSR
+        });
+
+        if (!res.ok) {
+            // Maneja errores si la respuesta de la API no es exitosa
+            throw new Error(`Failed to fetch data: ${res.status} ${res.statusText}`);
+        }
+
+        const data = await res.json();
+        console.log(data.data)
+        return data.data; // Asume que tu API devuelve un array de objetos directamente
+    } catch (error) {
+        console.error("Error fetching data:", error);
+        // Puedes retornar un array vacío o lanzar el error nuevamente
+        return [];
+    }
 }
 export default async function page() {
     const data = await getData()
