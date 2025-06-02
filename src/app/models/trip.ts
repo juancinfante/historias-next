@@ -9,6 +9,7 @@ export interface FechaViaje {
     descripcion: string
     destino: string
     origen: string
+    region: string
     fechas: FechaViaje[]
     incluye: string[]
     noIncluye: string[]

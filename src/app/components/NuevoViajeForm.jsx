@@ -2,7 +2,7 @@
 import { Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 
-export default function EditarViajeForm({ viaje }) {
+export default function NuevoViajeForm() {
     const [fechas, setFechas] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -29,22 +29,22 @@ export default function EditarViajeForm({ viaje }) {
 
     useEffect(() => {
         setFormData({
-            nombre: viaje.nombre || "",
-            portada: viaje.portada || "",
-            destino: viaje.destino || "",
-            origen: viaje.origen || "",
-            precio: viaje.precio || "",
-            incluye: (viaje.incluye || []).join(", "),
-            noIncluye: (viaje.noIncluye || []).join(", "),
-            region: viaje.region || "",
-            descripcion: viaje.descripcion || "",
+            nombre: "",
+            portada: "",
+            destino: "",
+            origen: "",
+            precio: "",
+            incluye: [],
+            noIncluye: [],
+            region: "",
+            descripcion: "",
         });
-        setFaq(viaje.faq?.length ? viaje.faq : [{ pregunta: "", respuesta: "" }]);
-        setFechas(viaje.fechas?.length ? viaje.fechas : [{ salida: "", regreso: "" }]);
-        setPreview(viaje.portada || "");
+        setFaq([{ pregunta: "", respuesta: "" }]);
+        setFechas([{ salida: "", regreso: "" }]);
+        setPreview("");
         setLoading(false);
-        setGaleria(viaje.galeria || []);
-    }, [viaje]);
+        setGaleria([]);
+    }, []);
 
     const handleFaqChange = (index, field, value) => {
         const nuevasFaq = [...faq];
@@ -85,10 +85,10 @@ export default function EditarViajeForm({ viaje }) {
         setFechas(nuevasFechas.length ? nuevasFechas : [{ salida: "", regreso: "" }]);
     };
 
-    const subirImagenACloudinary = async () => {
+    const subirImagenACloudinary = async (nombreViaje) => {
         const formData = new FormData();
         formData.append("file", nuevaImagen);
-        formData.append("nombreComercio", viaje.nombre);
+        formData.append("nombreComercio", nombreViaje);
 
         const res = await fetch("/api/cloudinary", {
             method: "POST",
@@ -96,6 +96,7 @@ export default function EditarViajeForm({ viaje }) {
         });
 
         if (!res.ok) throw new Error("Error al subir imagen");
+        setSaving(false)
 
         const result = await res.json();
         return result.imageUrl;
@@ -103,15 +104,16 @@ export default function EditarViajeForm({ viaje }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-         setSaving(true);
-
+        setSaving(true)
         if (!formData.nombre || !formData.destino || !formData.origen || !formData.precio || isNaN(parseFloat(formData.precio))) {
             setError("Completa todos los campos obligatorios y asegúrate que el precio sea un número.");
+            setSaving(false)
             return;
         }
 
         if (fechas.some(f => !f.salida || !f.regreso)) {
             setError("Todas las fechas deben tener salida y regreso.");
+            setSaving(false)
             return;
         }
 
@@ -119,13 +121,13 @@ export default function EditarViajeForm({ viaje }) {
             let portadaFinal = formData.portada;
 
             if (nuevaImagen) {
-                portadaFinal = await subirImagenACloudinary();
+                portadaFinal = await subirImagenACloudinary(formData.nombre);
             }
 
             let nuevasImagenes = [];
 
             if (imagenesGaleria.length > 0) {
-                nuevasImagenes = await subirImagenesGaleria();
+                nuevasImagenes = await subirImagenesGaleria(formData.nombre);
             }
 
             // Eliminar imágenes existentes de Cloudinary si es necesario
@@ -161,16 +163,40 @@ export default function EditarViajeForm({ viaje }) {
                 galeria: [...galeria, ...nuevasImagenes],
             };
 
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/trips/${viaje._id}`, {
-                method: "PUT",
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/trips`, {
+                method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),
             });
 
-            if (!res.ok) throw new Error("Error al actualizar el viaje");
+            if (!res.ok) {
+                setSaving(false)
+                throw new Error("Error al agregar el viaje");
+            }
 
-            setSuccessMessage("¡Viaje actualizado correctamente!");
-            setSaving(false);
+            // ✅ Resetear formulario
+            setFormData({
+                nombre: "",
+                portada: "",
+                destino: "",
+                origen: "",
+                precio: "",
+                incluye: "",
+                noIncluye: "",
+                region: "",
+                descripcion: "",
+            });
+            setFechas([{ salida: "", regreso: "" }]);
+            setFaq([{ pregunta: "", respuesta: "" }]);
+            setPreview("");
+            setGaleria([]);
+            setNuevaImagen(null);
+            setImagenesGaleria([]);
+            setImagenesAEliminar([]);
+            setSuccessMessage("Viaje guardado correctamente");
+
+            setSuccessMessage("¡Viaje agregado correctamente!");
+            setSaving(false)
             setError(null);
         } catch (err) {
             setError(err.message);
@@ -205,13 +231,13 @@ export default function EditarViajeForm({ viaje }) {
         }
     };
 
-    const subirImagenesGaleria = async () => {
+    const subirImagenesGaleria = async (nombreViaje) => {
         const urls = [];
 
         for (const img of imagenesGaleria) {
             const formData = new FormData();
             formData.append("file", img);
-            formData.append("nombreComercio", viaje.nombre);
+            formData.append("nombreComercio", nombreViaje);
 
             const res = await fetch("/api/cloudinary", {
                 method: "POST",
@@ -371,16 +397,16 @@ export default function EditarViajeForm({ viaje }) {
                     disabled={saving}
                     className={`px-4 py-2 rounded ${saving ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'} text-white`}
                 >
-                    {saving ? 
-                    <>
-                    <span className="flex justify-center items-center gap-2">
-                        <p>
-                            Guardando
-                        </p>
-                        <Loader2 className="h-4 w-4 animate-spin" /> 
-                     </span>
-                    </>
-                    : 'Guardar cambios'}
+                    {saving ?
+                        <>
+                            <span className="flex justify-center items-center gap-2">
+                                <p>
+                                    Guardando
+                                </p>
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                            </span>
+                        </>
+                        : 'Guardar'}
                 </button>
             </form>
         </div>
