@@ -27,7 +27,7 @@ export default async function Page() {
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem className="hidden md:block">
-                <BreadcrumbLink href="#">
+                <BreadcrumbLink href="/dashboard/viajes">
                   Viajes
                 </BreadcrumbLink>
               </BreadcrumbItem>

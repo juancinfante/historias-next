@@ -94,6 +94,8 @@ export default function CompraContent() {
                 metodoPago,
                 tipoPago, // 'total' o 'reserva'
                 precio: tipoPago === 'reserva' ? subtotal * 0.3 : subtotal,
+                estado: metodoPago === 'transferencia' ? 'pendiente' : ''
+                
             }
 
             const res = await fetch('/api/pagar', {

@@ -115,9 +115,6 @@ export default function ReservasPage() { // Cambiado a un Client Component
         </div>
       </header>
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-        <div className='flex w-full justify-end'>
-          <ModalNuevaReserva onSuccess={() => fetchReservas()} />
-        </div>
         {/* Pasa las columnas configuradas con la función de recarga */}
         <div className="flex w-full justify-end">
                 <ModalNuevaReserva onSuccess={() => fetchReservas()} />
