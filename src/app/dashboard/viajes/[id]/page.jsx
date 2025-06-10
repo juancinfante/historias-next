@@ -37,9 +37,9 @@ export default async function Page({ params }) {
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem className="hidden md:block">
-                <BreadcrumbLink href="#">
-                  Viajes
-                </BreadcrumbLink>
+                <BreadcrumbLink href="/dashboard/viajes">
+                                  Viajes
+                                </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator className="hidden md:block" />
               <BreadcrumbItem>

@@ -2,9 +2,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Preference } from 'mercadopago'; // Asegúrate que esté correctamente importado
 import { MercadoPagoConfig } from 'mercadopago'; // O desde donde lo tengas inicializado
-import { nanoid } from 'nanoid';
 import clientPromise from '../../lib/mongodb';
 import { sendTransferenciaEmail } from '../../lib/sendTransferenciaEmail';
+import { generarCodigoUnico } from 'app/utils/utils';
 
 // Inicializa MercadoPago con tu accessToken
 const mercadopago = new MercadoPagoConfig({
@@ -14,33 +14,14 @@ const mercadopago = new MercadoPagoConfig({
 const client = await clientPromise;
 const db = client.db('historias');
 
-const letras = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-const numeros = '0123456789';
-
-async function generarCodigoUnico(db): Promise<string> {
-  let codigo = '';
-  let existe = true;
-
-  while (existe) {
-    const letrasAleatorias = Array.from({ length: 3 }, () => letras[Math.floor(Math.random() * letras.length)]).join('');
-    const numerosAleatorios = Array.from({ length: 3 }, () => numeros[Math.floor(Math.random() * numeros.length)]).join('');
-    codigo = letrasAleatorias + numerosAleatorios;
-
-    const existeCodigo = await db.collection('reservas').findOne({ codigo });
-    if (!existeCodigo) existe = false;
-  }
-
-  return codigo;
-}
-
 export async function POST(req: NextRequest) {
   try {
     const { titulo, pasajeros, precio, tipoPago, metodoPago, tripID, estado } = await req.json();
 
-    if (metodoPago === 'transferencia' || metodoPago === 'efectivo' || metodoPago === 'mercado pago') {
+    if (metodoPago === 'transferencia' || metodoPago === 'efectivo') {
       
       // Creamos una reserva pendiente
-      const codigo = await generarCodigoUnico(db);
+      const codigo = await generarCodigoUnico();
 
       const nuevaReserva = {
         viajeId: tripID,
@@ -60,7 +41,7 @@ export async function POST(req: NextRequest) {
       
       await sendTransferenciaEmail({
         email: pasajeros[0].email,
-        nombrePasajero: pasajeros[0].nombre,
+        nombrePasajero: pasajeros[0].nombre + ' ' + pasajeros[0].apellido,
         codigo: codigo,
         precio: precio,
         tipoPago
@@ -68,7 +49,6 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json({ codigo });
     }
-
     const preference = await new Preference(mercadopago).create({
       body: {
         items: [
@@ -84,7 +64,8 @@ export async function POST(req: NextRequest) {
           pasajeros,
           precio,
           tipoPago,
-          metodoPago
+          titulo,
+          cantidad: pasajeros.length,
         },
       },
     });

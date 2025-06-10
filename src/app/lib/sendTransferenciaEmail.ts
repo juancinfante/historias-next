@@ -9,20 +9,17 @@ export async function sendTransferenciaEmail({
   precio,
   tipoPago,
 }) {
-  const montoTexto = tipoPago === 'reserva'
-    ? `el 30% del total (${precio.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })})`
-    : `el monto total (${precio.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })})`
-
+    
   await resend.emails.send({
     from: 'onboarding@resend.dev', // debe estar verificado en Resend
     to: email,
     subject: `Reserva confirmada: ${codigo}`,
     html: `
-      <h2>Hola,</h2>
+      <h2>Hola, ${nombrePasajero}</h2>
       <p>Gracias por reservar tu lugar con nosotros 🙌</p>
       <p>Tu número de reserva es: <strong>${codigo}</strong></p>
-      <p>💸 Te recordamos que elegiste pagar por <strong>transferencia bancaria</strong>.</p>
-      <p>Por favor, realizá una transferencia por <strong>${montoTexto}</strong> a la siguiente cuenta:</p>
+      <p>💸 Te recordamos que elegiste pagar por <strong>transferencia bancaria</strong> abonando el ${tipoPago == "reserva" ? "30 %" : "total del viaje."}</p>
+      <p>Por favor, realizá una transferencia por <strong>${tipoPago == "reserva" ? ((30 * precio) / 100) : precio }</strong> a la siguiente cuenta:</p>
       <ul>
         <li><strong>CBU:</strong> 0000000000000000000000</li>
         <li><strong>Alias:</strong> historias.viajar</li>

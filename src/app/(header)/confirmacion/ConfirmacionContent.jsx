@@ -17,11 +17,11 @@ export default function ConfirmacionReserva() {
         setLoading(false)
         return
       }
-
       try {
-        const res = await fetch(`/api/reservas?codigo=${codigo}`)
+        const res = await fetch(`/api/reservas/codigo/${codigo}`)
         if (!res.ok) throw new Error('No encontrada')
         const data = await res.json()
+      console.log(data)
         setReserva(data)
       } catch (err) {
         setError(true)

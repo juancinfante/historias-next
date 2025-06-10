@@ -13,6 +13,9 @@ import {
 import React from 'react'
 import { DataTable } from "./data-table"
 import { columns } from "./colmuns"
+import Link from "next/link"
+import { Button } from "@/components/components/ui/button"
+import { PlusCircle } from "lucide-react"
 
 async function getData() {
     try {
@@ -30,7 +33,6 @@ async function getData() {
         }
 
         const data = await res.json();
-        console.log(data.data)
         return data.data; // Asume que tu API devuelve un array de objetos directamente
     } catch (error) {
         console.error("Error fetching data:", error);
@@ -66,6 +68,12 @@ export default async function page() {
                 </div>
             </header>
             <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+                <Button className="ml-2 self-start">
+                    <Link href="/dashboard/viajes/nuevo" className="hover-pointer flex items-center">
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Nueva
+                    </Link>
+                </Button>
                 <DataTable columns={columns} data={data} />
             </div>
         </>

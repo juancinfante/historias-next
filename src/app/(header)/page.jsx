@@ -23,7 +23,6 @@ export default function Home() {
       <SectionNaturaleza />
       <CarouselPaquetes />
       <OtrosDestinos />
-      <Footer />
       <ChatBot />
     </>
   )
