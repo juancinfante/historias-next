@@ -5,9 +5,10 @@ import Image from 'next/image'
 const paquetes = [
   {
     title: 'Aventura en la Quebrada de Humahuaca',
-    duration: '5-6 noches',
+    duration: '5 noches - 4 dias',
     description: 'Explorá los cerros multicolores y los pueblos tradicionales de Jujuy en un viaje lleno de cultura y paisajes únicos.',
-    image: '/img/hornocal.webp'
+    image: '/img/hornocal.webp',
+    precio: 450000
   },
   {
     title: 'Retiro Colonial en Salta',
@@ -34,7 +35,7 @@ export default function CarouselPaquetes() {
     dots: true,
     infinite: true,
     speed: 500,
-    slidesToShow: 3,
+    slidesToShow: 4,
     slidesToScroll: 1,
     arrows: true,
     responsive: [
@@ -69,11 +70,12 @@ export default function CarouselPaquetes() {
                   className="object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-                <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                  <h3 className="text-2xl font-bold mb-2">{paquete.title}</h3>
-                  <p className="text-xl mb-3">{paquete.duration}</p>
-                  <p className="text-sm text-white/80 mb-6">{paquete.description}</p>
-                  <button className="inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 py-2 bg-white/10 border border-white/20 hover:bg-white/20 transition">
+                <div className="flex flex-col absolute bottom-0 left-0 right-0 p-6 text-white">
+                  <h3 className="text-2xl font-bold">{paquete.title}</h3>
+                  <p className="text-sm">{paquete.duration}</p>
+                  <h1 className='text-3xl font-semibold'><span className='text-lg mr-1'>$</span>450.000</h1>
+                  <span className='text-sm'>Saliendo desde Santiago del Estero, Tucuman</span>
+                  <button className="cursor-pointer mt-2 inline-flex items-center justify-center w-fit rounded-md text-sm font-medium h-10 p-2 bg-white/10 border border-white/20 hover:bg-white/20 transition">
                     Ver Detalles
                   </button>
                 </div>

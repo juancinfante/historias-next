@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import React from 'react'
-
+import SelectorButacas from '@/components/SelectorButacas'
 export default async function Page({ params }) {
     const res = await fetch(`https://historias-henna.vercel.app//api/trips/${params.slug}`, {
         cache: 'no-store'
@@ -130,6 +130,7 @@ export default async function Page({ params }) {
                                     </option>
                                 ))}
                             </select>
+                        <SelectorButacas />
 
                             <button
                                 type="submit"
