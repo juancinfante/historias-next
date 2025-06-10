@@ -1,8 +1,10 @@
 import Image from 'next/image'
 import React from 'react'
+import SliderGaleria from '@/components/SliderGaleria'
 
 export default async function Page({ params }) {
-    const res = await fetch(`https://historias-henna.vercel.app//api/trips/${params.slug}`, {
+    const { slug } = await params
+    const res = await fetch(`https://historias-henna.vercel.app/api/trips/${slug}`, {
         cache: 'no-store'
     })
 
@@ -43,7 +45,7 @@ export default async function Page({ params }) {
                 </div>
             </header>
 
-            <section className="max-w-5xl mx-auto px-4 py-8">
+            <section className="max-w-6xl mx-auto px-4 py-8">
                 <div className="grid md:grid-cols-2 gap-10 items-start">
                     {/* Main content */}
                     <div className='bg-white p-6 rounded-lg shadow-md'>
@@ -140,6 +142,18 @@ export default async function Page({ params }) {
                         </form>
                     </div>
                 </div>
+                <SliderGaleria imagenes={trip.galeria}/>
+                <section className="max-w-6xl mx-auto px-4 py-8">
+                    <h2 className="text-2xl font-bold mb-4">Preguntas frecuentes</h2>
+                    <div className="space-y-4">
+                        {trip.faq?.map((item, i) => (
+                            <details key={i} className="border border-gray-300 rounded-md p-4">
+                                <summary className="font-semibold cursor-pointer">{item.pregunta}</summary>
+                                <p className="text-gray-700 mt-2">{item.respuesta}</p>
+                            </details>
+                        ))}
+                    </div>
+                </section>
             </section>
         </>
     )
