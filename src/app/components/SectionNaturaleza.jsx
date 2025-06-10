@@ -22,14 +22,14 @@ export default function SectionNaturaleza() {
         {/* Imágenes */}
         <div className="relative h-96 w-full">
           <Image
-            src="/img/hornocal.webp"
+            src="https://media.istockphoto.com/id/1388968455/photo/dirt-street-of-humahuaca-jujuy-argentina.jpg?s=612x612&w=0&k=20&c=qFBwLeNbWHnr17PrImHzpep9yKp0Cbx0TF-OXDfVO3g="
             alt="Naturaleza 1"
             fill
             className="object-cover rounded-lg shadow-lg"
             style={{ zIndex: 1 }}
           />
           <Image
-            src="/img/hornocal.webp"
+            src="https://res.cloudinary.com/worldpackers/image/upload/c_fill,f_auto,q_auto,w_1024/v1/guides/article_cover/m9axmbe4pdw289xmvhza?_a=BACADKGT"
             alt="Naturaleza 2"
             width={400}
             height={300}

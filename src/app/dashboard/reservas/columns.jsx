@@ -69,17 +69,17 @@ export const columns = (onRefreshData) => [ // MODIFICADO: Ahora 'columns' es un
     header: "Estado",
     cell: ({ row }) => (
       <Badge variant="outline">
-          {row.original.estado === "pagado" && (
-            <CheckCircle2Icon className=" text-green-500" />
-          )}
-          {row.original.estado === "pendiente" && (
-            <LoaderIcon />
-          )}
-          {row.original.estado === "cancelado" && (
-            <X className="text-red-500"/>
-          )}
-          <span>{row.original.estado}</span>
-        </Badge>
+        {row.original.estado === "pagado" && (
+          <CheckCircle2Icon className=" text-green-500" />
+        )}
+        {row.original.estado === "pendiente" && (
+          <LoaderIcon />
+        )}
+        {row.original.estado === "cancelado" && (
+          <X className="text-red-500" />
+        )}
+        <span>{row.original.estado}</span>
+      </Badge>
     ),
   },
   {
@@ -103,6 +103,26 @@ export const columns = (onRefreshData) => [ // MODIFICADO: Ahora 'columns' es un
       const [isModalOpen, setIsModalOpen] = useState(false);
       const [editedReserva, setEditedReserva] = useState(payment);
       const [isLoading, setIsLoading] = useState(false);
+      const [pagos, setPagos] = useState(editedReserva.pagos || []);
+      const [nuevoPago, setNuevoPago] = useState({ monto: '', metodo: 'efectivo', fecha: '' });
+
+      const handleNuevoPagoChange = (e) => {
+        const { name, value } = e.target;
+        setNuevoPago((prev) => ({ ...prev, [name]: value }));
+      };
+
+      const agregarPago = () => {
+        if (!nuevoPago.monto || !nuevoPago.fecha) {
+          toast.error("Completa monto y fecha");
+          return;
+        }
+        setPagos((prev) => [...prev, nuevoPago]);
+        setNuevoPago({ monto: '', metodo: 'efectivo', fecha: '' });
+      };
+
+      const eliminarPago = (index) => {
+        setPagos((prev) => prev.filter((_, i) => i !== index));
+      };
 
       const formatFecha = (isoString) => {
         if (!isoString) return 'N/A';
@@ -134,35 +154,32 @@ export const columns = (onRefreshData) => [ // MODIFICADO: Ahora 'columns' es un
         try {
           const updatePayload = {};
 
-          if (editedReserva.estado !== reserva.estado) {
-            updatePayload.estado = editedReserva.estado;
-          }
-          if (editedReserva.metodoPago !== reserva.metodoPago) {
-            updatePayload.metodoPago = editedReserva.metodoPago;
-          }
-          if (editedReserva.cantidad !== reserva.cantidad) {
-            updatePayload.cantidad = editedReserva.cantidad;
-          }
+          if (editedReserva.estado !== reserva.estado) updatePayload.estado = editedReserva.estado;
+          if (editedReserva.metodoPago !== reserva.metodoPago) updatePayload.metodoPago = editedReserva.metodoPago;
+          if (editedReserva.cantidad !== reserva.cantidad) updatePayload.cantidad = editedReserva.cantidad;
+
           const editedPrecio = parseFloat(editedReserva.precio.toString().replace('$', ''));
           const originalPrecio = parseFloat(reserva.precio.toString().replace('$', ''));
-          if (!isNaN(editedPrecio) && editedPrecio !== originalPrecio) {
-              updatePayload.precio = editedPrecio;
-          }
-          if (editedReserva.tipoPago !== reserva.tipoPago) {
-            updatePayload.tipoPago = editedReserva.tipoPago;
-          }
+          if (!isNaN(editedPrecio) && editedPrecio !== originalPrecio) updatePayload.precio = editedPrecio;
+
+          if (editedReserva.tipoPago !== reserva.tipoPago) updatePayload.tipoPago = editedReserva.tipoPago;
 
           editedReserva.pasajeros.forEach((editedPasajero, index) => {
             const originalPasajero = reserva.pasajeros[index];
             if (originalPasajero) {
               for (const key in editedPasajero) {
-                const field = key;
-                if (editedPasajero[field] !== originalPasajero[field]) {
-                  updatePayload[`pasajeros.${index}.${field}`] = editedPasajero[field];
+                if (editedPasajero[key] !== originalPasajero[key]) {
+                  updatePayload[`pasajeros.${index}.${key}`] = editedPasajero[key];
                 }
               }
             }
           });
+
+          const pagosIguales =
+            pagos.length === (reserva.pagos?.length || 0) &&
+            pagos.every((pago, index) => JSON.stringify(pago) === JSON.stringify(reserva.pagos[index]));
+
+          if (!pagosIguales) updatePayload.pagos = pagos;
 
           if (Object.keys(updatePayload).length === 0) {
             toast.info("No se detectaron cambios para guardar.");
@@ -172,33 +189,25 @@ export const columns = (onRefreshData) => [ // MODIFICADO: Ahora 'columns' es un
           }
 
           const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-          if (!baseUrl) {
-            throw new Error("NEXT_PUBLIC_API_BASE_URL no está definido en las variables de entorno.");
-          }
+          if (!baseUrl) throw new Error("NEXT_PUBLIC_API_BASE_URL no está definido.");
 
           const response = await fetch(`${baseUrl}/api/reservas/${reserva._id}`, {
             method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(updatePayload),
           });
 
           if (!response.ok) {
-            const errorData = await response.json();
+            const errorData = await response.json().catch(() => ({}));
             throw new Error(errorData.error || `Error HTTP: ${response.status}`);
           }
 
           const updatedReservaFromServer = await response.json();
           setReserva(updatedReservaFromServer);
           setEditedReserva(updatedReservaFromServer);
-
+          setPagos(updatedReservaFromServer.pagos || []);
           setIsModalOpen(false);
-
-          // MODIFICADO: Llamada a la función de recarga de datos si existe
-          if (onRefreshData) {
-            onRefreshData();
-          }
+          if (onRefreshData) onRefreshData();
 
         } catch (error) {
           console.error('Error al actualizar la reserva:', error);
@@ -206,6 +215,7 @@ export const columns = (onRefreshData) => [ // MODIFICADO: Ahora 'columns' es un
         } finally {
           setIsLoading(false);
         }
+
       };
 
       return (
@@ -303,6 +313,62 @@ export const columns = (onRefreshData) => [ // MODIFICADO: Ahora 'columns' es un
                       </div>
                     </div>
 
+                    <h3 className="text-lg font-semibold border-b pb-2 mb-2 mt-4">Pagos realizados</h3>
+
+                    {pagos.length === 0 ? (
+                      <p className="text-gray-500">No hay pagos registrados.</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {pagos.map((pago, index) => (
+                          <div key={index} className="flex items-center gap-2 border p-2 rounded-md">
+                            <span className="flex-1 text-sm">${pago.monto} - {pago.metodo} - {pago.fecha}</span>
+                            <button
+                              type="button"
+                              onClick={() => eliminarPago(index)}
+                              className="text-red-500 text-xs"
+                            >
+                              Eliminar
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Formulario para agregar pago */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-2">
+                      <Input
+                        name="monto"
+                        placeholder="Monto"
+                        value={nuevoPago.monto}
+                        onChange={handleNuevoPagoChange}
+                        type="number"
+                      />
+                      <select
+                        name="metodo"
+                        value={nuevoPago.metodo}
+                        onChange={handleNuevoPagoChange}
+                        className="border rounded-md p-2 text-sm"
+                      >
+                        <option value="efectivo">Efectivo</option>
+                        <option value="mercado pago">Mercado Pago</option>
+                        <option value="transferencia">Transferencia</option>
+                        <option value="otro">Otro</option>
+                      </select>
+                      <Input
+                        name="fecha"
+                        type="date"
+                        value={nuevoPago.fecha}
+                        onChange={handleNuevoPagoChange}
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      className="mt-2"
+                      onClick={agregarPago}
+                    >
+                      Agregar Pago
+                    </Button>
+
                     <h3 className="text-lg font-semibold border-b pb-2 mb-2 mt-4">Pasajeros ({reserva.pasajeros.length})</h3>
                     {editedReserva.pasajeros.length > 0 ? (
                       editedReserva.pasajeros.map((pasajero, index) => (
@@ -363,81 +429,81 @@ export const columns = (onRefreshData) => [ // MODIFICADO: Ahora 'columns' es un
     },
   },
   { // Le doy un nombre a la constante de la columna
-  header: "Eliminar",
-  id: "delete-action",
-  cell: ({ row, table }) => {
-    const reserva = row.original;
-    const [isDeleting, setIsDeleting] = useState(false);
+    header: "Eliminar",
+    id: "delete-action",
+    cell: ({ row, table }) => {
+      const reserva = row.original;
+      const [isDeleting, setIsDeleting] = useState(false);
 
-    // Necesitamos pasar la función onRefreshData desde el componente padre
-    // Asumo que el `table` objeto o las propiedades del `cell` pueden tener una forma de acceder a esto.
-    // Si no, tendrás que pasar `onRefreshData` como una prop a la `DataTable` y luego a las `columns`.
-    // Por simplicidad, asumiré que se puede acceder como `table.options.meta?.onRefreshData`
-    // (Esta es una convención común si usas TanStack Table con `meta` en sus opciones).
+      // Necesitamos pasar la función onRefreshData desde el componente padre
+      // Asumo que el `table` objeto o las propiedades del `cell` pueden tener una forma de acceder a esto.
+      // Si no, tendrás que pasar `onRefreshData` como una prop a la `DataTable` y luego a las `columns`.
+      // Por simplicidad, asumiré que se puede acceder como `table.options.meta?.onRefreshData`
+      // (Esta es una convención común si usas TanStack Table con `meta` en sus opciones).
 
-    const handleDeleteReserva = async (reservaId) => {
-      setIsDeleting(true);
-      try {
-        const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-        if (!baseUrl) {
-          throw new Error("NEXT_PUBLIC_API_BASE_URL no está definido en las variables de entorno.");
+      const handleDeleteReserva = async (reservaId) => {
+        setIsDeleting(true);
+        try {
+          const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+          if (!baseUrl) {
+            throw new Error("NEXT_PUBLIC_API_BASE_URL no está definido en las variables de entorno.");
+          }
+
+          const res = await fetch(`${baseUrl}/api/reservas/${reservaId}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+          });
+
+          if (!res.ok) {
+            const errorData = await res.json();
+            throw new Error(errorData.error || 'Error al eliminar la reserva');
+          }
+
+          if (onRefreshData) {
+            onRefreshData(); // Llama a la función para refrescar los datos de la tabla
+          }
+        } catch (err) {
+          console.error("Error al eliminar reserva:", err);
+          toast.error(err.message || "Error al eliminar la reserva.");
+        } finally {
+          setIsDeleting(false);
         }
+      };
 
-        const res = await fetch(`${baseUrl}/api/reservas/${reservaId}`, {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-        });
-
-        if (!res.ok) {
-          const errorData = await res.json();
-          throw new Error(errorData.error || 'Error al eliminar la reserva');
-        }
-
-        if (onRefreshData) {
-          onRefreshData(); // Llama a la función para refrescar los datos de la tabla
-        }
-      } catch (err) {
-        console.error("Error al eliminar reserva:", err);
-        toast.error(err.message || "Error al eliminar la reserva.");
-      } finally {
-        setIsDeleting(false);
-      }
-    };
-
-    return (
-      <AlertDialog>
-        <AlertDialogTrigger asChild>
-          <Button
-            variant="destructive"
-            size="sm"
-            disabled={isDeleting}
-          >
-            {isDeleting ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Trash2 className="h-4 w-4" />
-            )}
-          </Button>
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Estás absolutamente seguro?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta acción no se puede deshacer. Esto eliminará permanentemente la reserva seleccionada.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => handleDeleteReserva(reserva._id)} // <-- Llama la función de eliminación aquí
-              disabled={isDeleting} // Opcional: deshabilita el botón de acción mientras elimina
+      return (
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              variant="destructive"
+              size="sm"
+              disabled={isDeleting}
             >
-              Continuar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    );
-  },
-}
+              {isDeleting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>¿Estás absolutamente seguro?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Esta acción no se puede deshacer. Esto eliminará permanentemente la reserva seleccionada.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => handleDeleteReserva(reserva._id)} // <-- Llama la función de eliminación aquí
+                disabled={isDeleting} // Opcional: deshabilita el botón de acción mientras elimina
+              >
+                Continuar
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      );
+    },
+  }
 ];

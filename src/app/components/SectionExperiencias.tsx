@@ -39,20 +39,21 @@ export default function SectionExperiencias() {
 
       {/* Imágenes */}
       <div className="relative w-full md:w-1/2 h-80 flex justify-center px-4 lg:px-0">
-        <Image
-          src="/img/hornocal.webp"
-          alt="Cultura 1"
-          width={500}
-          height={300}
-          className="absolute right-0 top-0 w-3/5 rounded-lg shadow-lg object-cover"
-        />
-        <Image
-          src="/img/hornocal.webp"
+      <Image
+          src="https://www.infobae.com/resizer/v2/B6VK45VAQNDQVF3QRY5PP7IX2I.png?auth=d1193c5d0d14ce5eb705cf92ee3440fa4b845603a37fdcb6ff6a6235f457996e&smart=true&width=992&height=558&quality=85"
           alt="Cultura 2"
           width={500}
           height={300}
           className="absolute left-0 bottom-0 w-2/3 rounded-lg shadow-xl object-cover"
         />
+        <Image
+          src="https://media-buenasvibras.s3.amazonaws.com/prod/18/viajes-grupales-para-solteros2.png"
+          alt="Cultura 1"
+          width={500}
+          height={300}
+          className="absolute right-0 top-0 w-3/5 rounded-lg shadow-lg object-cover"
+        />
+        
       </div>
     </section>
   )
