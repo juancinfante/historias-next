@@ -97,29 +97,58 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Error en el servidor' }, { status: 500 })
     }
 }
+
+
 export async function GET(req: NextRequest) {
   try {
     const client = await clientPromise;
     const db = client.db('historias');
+    const collection = db.collection('reservas');
 
-    // Usamos find() sin argumentos para obtener todos los documentos de la colección
-    // y luego .toArray() para convertir el cursor en un array de objetos.
-    const reservas = await db.collection('reservas').find({}).toArray();
+    const searchParams = req.nextUrl.searchParams;
 
-    // Si no se encuentra ninguna reserva, find().toArray() devolverá un array vacío.
-    // Puedes decidir si quieres un 404 aquí o simplemente un array vacío.
-    // Lo más común es devolver un array vacío si no hay resultados, no un 404.
-    if (!reservas || reservas.length === 0) {
-      // Puedes devolver un array vacío con status 200 si es el comportamiento deseado
-      // o un 404 si "no encontradas" significa que la colección no existe o un error.
-      // Para "todas las reservas", lo normal es [] y 200 OK.
-      return NextResponse.json([]); // Devuelve un array vacío si no hay reservas
+    const destino = searchParams.get('destino');
+    const codigo = searchParams.get('codigo');
+    const fechaElegida = searchParams.get('fechaElegida');
+    const metodoPago = searchParams.get('metodoPago');
+    const tipoPago = searchParams.get('tipoPago');
+    const estado = searchParams.get('estado');
+
+    const filter: any = {};
+
+    if (destino) {
+      filter.titulo = { $regex: destino, $options: 'i' };
     }
 
-    return NextResponse.json(reservas);
+    if (codigo) {
+      filter.codigo = { $regex: codigo, $options: 'i' };
+    }
+
+    if (fechaElegida) {
+      filter.fechaElegida = fechaElegida;
+    }
+
+    if (metodoPago) {
+      filter.metodoPago = metodoPago;
+    }
+
+    if (tipoPago) {
+      filter.tipoPago = tipoPago;
+    }
+
+    if (estado) {
+      filter.estado = estado;
+    }
+
+    const reservas = await collection.find(filter).toArray();
+
+    return NextResponse.json({
+      total: reservas.length,
+      reservas,
+    });
   } catch (error) {
-    console.error('GET error todas las reservas:', error);
-    // Devuelve un error 500 en caso de problemas con la base de datos o el servidor
-    return NextResponse.json({ error: 'Error interno del servidor al obtener las reservas' }, { status: 500 });
+    console.error('Error al obtener reservas:', error);
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
   }
 }
+

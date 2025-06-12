@@ -52,28 +52,12 @@ export function DataTable({ columns, data, }) {
     return (
         <div>
             <div className="flex items-center py-4 gap-4">
-                <Input
-                    placeholder="Buscar por codigo.."
-                    value={(table.getColumn("codigo")?.getFilterValue() as string) ?? ""}
-                    onChange={(event) =>
-                        table.getColumn("codigo")?.setFilterValue(event.target.value)
-                    }
-                    className="max-w-sm"
-                />
-                <Input
-                    placeholder="Buscar por destino.."
-                    value={(table.getColumn("titulo")?.getFilterValue() as string) ?? ""}
-                    onChange={(event) =>
-                        table.getColumn("titulo")?.setFilterValue(event.target.value)
-                    }
-                    className="max-w-sm"
-                />
                 <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
+                    {/* <DropdownMenuTrigger asChild>
                         <Button variant="outline" className="ml-auto">
                             Columnas
                         </Button>
-                    </DropdownMenuTrigger>
+                    </DropdownMenuTrigger> */}
                     <DropdownMenuContent align="end">
                         {table
                             .getAllColumns()

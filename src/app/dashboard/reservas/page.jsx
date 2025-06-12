@@ -1,74 +1,138 @@
-"use client" // <--- ¡IMPORTANTE! Marca este archivo como Client Component
+"use client";
 
-import React, { useState, useEffect, useCallback } from 'react' // Importa hooks necesarios
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
-  BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@/components/components/ui/breadcrumb"
-import { Separator } from "@/components/components/ui/separator"
-import {
-  SidebarTrigger,
-} from "@/components/components/ui/sidebar"
-import { DataTable } from './data-table'
-import { columns } from './columns' // Asegúrate que este path sea correcto
-import { Loader2 } from 'lucide-react'
-import ModalNuevaReserva from "@/components/ModalNuevaReserva"
+} from "@/components/components/ui/breadcrumb";
+import { Separator } from "@/components/components/ui/separator";
+import { SidebarTrigger } from "@/components/components/ui/sidebar";
+import { Button } from "@/components/components/ui/button";
+import { DataTable } from "./data-table";
+import { columns } from "./columns";
+import { Loader2 } from "lucide-react";
+import ModalNuevaReserva from "@/components/ModalNuevaReserva";
+import { Input } from "@/components/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/components/ui/select";
 
+export default function ReservasPage() {
+  const [data, setData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-export default function ReservasPage() { // Cambiado a un Client Component
-  const [data, setData] = useState([]); // Estado para tus datos de reservas
-  const [isLoading, setIsLoading] = useState(true); // Estado para el indicador de carga
-  const [error, setError] = useState(null); // Estado para manejar errores
+  const [codigo, setCodigo] = useState("");
+  const [destinos, setDestinos] = useState([]);
+  const [fechas, setFechas] = useState([]);
+  const [destinoSeleccionado, setDestinoSeleccionado] = useState("");
+  const [fechaSeleccionada, setFechaSeleccionada] = useState("");
+  const [metodoPago, setMetodoPago] = useState('');
+  const [tipoPago, setTipoPago] = useState('');
+  const [estadoPago, setEstadoPago] = useState('');
+  const [cantidad, setCantidad] = useState('');
 
-  // Función para obtener los datos de las reservas
-  // Usamos useCallback para que esta función no cambie en cada render si no es necesario,
-  // lo cual es bueno cuando se pasa como prop.
+  // Obtiene todas las reservas
   const fetchReservas = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-      if (!baseUrl) {
-        throw new Error("NEXT_PUBLIC_API_BASE_URL no está definido en las variables de entorno.");
-      }
-
-      const response = await fetch(`${baseUrl}/api/reservas`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        // cache: 'no-store' // No es necesario aquí si fetch se hace en el cliente
-      });
-
+      const response = await fetch(`${baseUrl}/api/reservas`);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || `Error HTTP: ${response.status}`);
       }
-
       const reservas = await response.json();
-      setData(reservas);
+      setData(reservas.reservas);
+      setCantidad(reservas.total);
     } catch (err) {
-      console.error('Error al obtener las reservas:', err);
+      console.error("Error al obtener las reservas:", err);
       setError(err.message);
     } finally {
       setIsLoading(false);
     }
-  }, []); // El array de dependencias vacío significa que esta función solo se crea una vez
+  }, []);
 
-  // Ejecuta fetchReservas cuando el componente se monta por primera vez
+  // Obtiene los destinos
+  useEffect(() => {
+    async function obtenerDestinos() {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/trips`);
+        const data = await res.json();
+        setDestinos(data.data);
+      } catch (err) {
+        console.error("Error al obtener destinos:", err);
+      }
+    }
+    obtenerDestinos();
+  }, []);
+
+  // Actualiza fechas al cambiar destino
+  useEffect(() => {
+    const destino = destinos.find((d) => d.titulo === destinoSeleccionado);
+    if (destino && destino.fechas) {
+      setFechas(destino.fechas);
+    } else {
+      setFechas([]);
+    }
+  }, [destinoSeleccionado, destinos]);
+
+  // Carga inicial de todas las reservas
   useEffect(() => {
     fetchReservas();
-  }, [fetchReservas]); // Dependencia de fetchReservas
+  }, [fetchReservas]);
 
+  // Carga inicial de todas las fechas segun destino
+  useEffect(() => {
+    if (!destinoSeleccionado) {
+      setFechas([]);
+      return;
+    }
 
+    const destino = destinos.find((d) => d.nombre === destinoSeleccionado);
 
+    if (destino && Array.isArray(destino.fechas)) {
+      // Transformamos [{salida, regreso}] → ["2025-06-04 - 2025-06-04"]
+      const fechasFormateadas = destino.fechas.map((f) => `${f.salida}`);
+      setFechas(fechasFormateadas);
+    } else {
+      setFechas([]);
+    }
+  }, [destinoSeleccionado, destinos]);
 
-  // Pasa la función `WorkspaceReservas` a la función `columns`
-  // Esto permite que el componente de acción en 'columns.js' la llame
+  // Buscar filtrando
+  const handleBuscar = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const params = new URLSearchParams();
+
+      if (codigo) params.append("codigo", codigo);
+      if (destinoSeleccionado) params.append("destino", destinoSeleccionado);
+      if (fechaSeleccionada) params.append("fechaElegida", fechaSeleccionada);
+      if (metodoPago) params.append("metodoPago", metodoPago);
+      if (tipoPago) params.append("tipoPago", tipoPago);
+      if (estadoPago) params.append("estado", estadoPago);
+
+      const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/reservas${params.toString() ? "?" + params.toString() : ""}`;
+
+      const res = await fetch(url);
+      const result = await res.json();
+      setData(result.reservas);
+      setCantidad(result.total);
+    } catch (err) {
+      console.error(err);
+      setError("Error al filtrar las reservas");
+    } finally {
+      setIsLoading(false);
+    }
+
+  };
+
   const reservationColumns = columns(fetchReservas);
 
   if (isLoading) {
@@ -101,26 +165,150 @@ export default function ReservasPage() { // Cambiado a un Client Component
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem className="hidden md:block">
-                <BreadcrumbLink href="#">
-                  Reservas
-                </BreadcrumbLink>
+                <BreadcrumbLink href="#">Reservas</BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator className="hidden md:block" />
-              <BreadcrumbItem>
-                {/* Si tienes alguna página actual o sub-ruta específica */}
-                {/* <BreadcrumbPage>Detalles</BreadcrumbPage> */}
-              </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
+
         </div>
       </header>
+
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-        {/* Pasa las columnas configuradas con la función de recarga */}
-        <div className="flex w-full justify-end">
-                <ModalNuevaReserva onSuccess={() => fetchReservas()} />
+        <div className="flex w-full justify-start">
+          <ModalNuevaReserva onSuccess={() => fetchReservas()} />
         </div>
+        {/* FORMULARIO DE FILTROS */}
+        <form onSubmit={handleBuscar} className="flex flex-wrap items-center gap-2 mb-4">
+          <Input
+            type="text"
+            placeholder="Buscar por código"
+            value={codigo}
+            onChange={(e) => setCodigo(e.target.value)}
+            className="border p-2 rounded w-fit"
+          />
+          <Select
+            value={destinoSeleccionado}
+            onValueChange={(value) => {
+              setDestinoSeleccionado(value === "__empty__" ? "" : value);
+              setFechaSeleccionada(""); // Resetear fecha cuando cambia el destino
+            }}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Todos los destinos" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__empty__">Todos los destinos</SelectItem>
+              {destinos.map((d) => (
+                <SelectItem key={d._id} value={d.nombre}>
+                  {d.nombre}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+
+
+          {/* Select de Fecha */}
+          <Select
+            value={fechaSeleccionada || "__empty__"}
+            onValueChange={(value) => setFechaSeleccionada(value === "__empty__" ? "" : value)}
+            disabled={!fechas.length}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Todas las fechas" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__empty__">Todas las fechas</SelectItem>
+              {fechas.map((fecha, index) => {
+                const salida = new Date(fecha);
+                const dia = salida.getDate();
+                const mes = salida.toLocaleDateString("es-ES", { month: "long" });
+                const texto = `${dia} ${mes.charAt(0).toUpperCase() + mes.slice(1)}`;
+                return (
+                  <SelectItem key={index} value={fecha}>
+                    {texto}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+
+          {/* Select de Método de Pago */}
+          <Select
+            value={metodoPago || "__empty__"}
+            onValueChange={(value) => setMetodoPago(value === "__empty__" ? "" : value)}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Método de Pago" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__empty__">Todos</SelectItem>
+              <SelectItem value="mercado pago">Mercado Pago</SelectItem>
+              <SelectItem value="efectivo">Efectivo</SelectItem>
+              <SelectItem value="transferencia">Transferencia</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Select de Tipo de Pago */}
+          <Select
+            value={tipoPago || "__empty__"}
+            onValueChange={(value) => setTipoPago(value === "__empty__" ? "" : value)}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Tipo de Pago" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__empty__">Todos</SelectItem>
+              <SelectItem value="reserva">Reserva</SelectItem>
+              <SelectItem value="total">Total</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Select de Estado */}
+          <Select
+            value={estadoPago || "__empty__"}
+            onValueChange={(value) => setEstadoPago(value === "__empty__" ? "" : value)}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Estado" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__empty__">Todos</SelectItem>
+              <SelectItem value="pagado">Pagado</SelectItem>
+              <SelectItem value="pendiente">Pendiente</SelectItem>
+              <SelectItem value="cancelado">Cancelado</SelectItem>
+            </SelectContent>
+          </Select>
+
+
+          <Button type="submit" className="px-4 py-2">
+            Buscar
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              setCodigo("");
+              setDestinoSeleccionado("");
+              setFechaSeleccionada("");
+              setMetodoPago("");
+              setTipoPago("");
+              setEstadoPago("");
+              fetchReservas();
+            }}
+          >
+            Limpiar
+          </Button>
+        </form>
+        <h1 className="text-2xl">{cantidad} reservas encontradas</h1>
+
+
+
+
         <DataTable columns={reservationColumns} data={data} />
       </div>
     </>
-  )
+  );
 }
