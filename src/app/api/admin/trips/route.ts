@@ -55,7 +55,9 @@ export async function POST(req: NextRequest) {
       descripcion,
       galeria,
       faq,
-      region
+      dias,
+      noches,
+      mostrarLugares
     } = body as Trip
 
     // Validación básica
@@ -85,7 +87,9 @@ export async function POST(req: NextRequest) {
       noIncluye: noIncluye || [],
       galeria: galeria || [],
       faq: faq || [],
-      region: region || "",
+      dias,
+      noches,
+      mostrarLugares,
       createdAt: new Date(),
       updatedAt: new Date()
     }

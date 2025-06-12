@@ -14,30 +14,41 @@ export default function NuevoViajeForm() {
     const [imagenesGaleria, setImagenesGaleria] = useState([]); // para subir nuevas imágenes (File[])
     const [imagenesAEliminar, setImagenesAEliminar] = useState([]); // Para almacenar las imágenes a eliminar
     const [saving, setSaving] = useState(false);
-
+    const [origenes, setOrigenes] = useState([]);
+    const opcionesOrigen = ["Santiago del Estero", "Tucumán", "Córdoba", "Salta"];
+    const [mostrarLugares, setMostrarLugares] = useState(true);
+    const [noches, setNoches] = useState(0);
+    const [dias, setDias] = useState(0);
     const [formData, setFormData] = useState({
         nombre: "",
         portada: "",
         destino: "",
-        origen: "",
+        origen: [],          // array
         precio: "",
-        incluye: "",
-        noIncluye: "",
+        incluye: [],
+        noIncluye: [],
         region: "",
         descripcion: "",
+        mostrarLugares: false, // booleano (por defecto true)
+        noches: 0,            // número
+        dias: 0,              // número
     });
+
 
     useEffect(() => {
         setFormData({
             nombre: "",
             portada: "",
             destino: "",
-            origen: "",
+            origen: [],
             precio: "",
             incluye: [],
             noIncluye: [],
             region: "",
             descripcion: "",
+            mostrarLugares: false,
+            noches: 0,
+            dias: 0,
         });
         setFaq([{ pregunta: "", respuesta: "" }]);
         setFechas([{ salida: "", regreso: "" }]);
@@ -45,6 +56,17 @@ export default function NuevoViajeForm() {
         setLoading(false);
         setGaleria([]);
     }, []);
+
+
+    function agregarOrigen(origen) {
+        if (!origenes.includes(origen)) {
+            setOrigenes([...origenes, origen]);
+        }
+    }
+
+    function eliminarOrigen(origen) {
+        setOrigenes(origenes.filter(o => o !== origen));
+    }
 
     const handleFaqChange = (index, field, value) => {
         const nuevasFaq = [...faq];
@@ -104,16 +126,18 @@ export default function NuevoViajeForm() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setSaving(true)
-        if (!formData.nombre || !formData.destino || !formData.origen || !formData.precio || isNaN(parseFloat(formData.precio))) {
+        setSaving(true);
+
+        // Validación básica
+        if (!formData.nombre || !formData.destino || origenes.length === 0 || !formData.precio || isNaN(parseFloat(formData.precio))) {
             setError("Completa todos los campos obligatorios y asegúrate que el precio sea un número.");
-            setSaving(false)
+            setSaving(false);
             return;
         }
 
         if (fechas.some(f => !f.salida || !f.regreso)) {
             setError("Todas las fechas deben tener salida y regreso.");
-            setSaving(false)
+            setSaving(false);
             return;
         }
 
@@ -125,12 +149,10 @@ export default function NuevoViajeForm() {
             }
 
             let nuevasImagenes = [];
-
             if (imagenesGaleria.length > 0) {
                 nuevasImagenes = await subirImagenesGaleria(formData.nombre);
             }
 
-            // Eliminar imágenes existentes de Cloudinary si es necesario
             if (imagenesAEliminar.length > 0) {
                 await Promise.all(
                     imagenesAEliminar.map(async (publicId) => {
@@ -152,15 +174,20 @@ export default function NuevoViajeForm() {
                 );
             }
 
+            // ✅ Preparar payload final
             const payload = {
                 ...formData,
                 portada: portadaFinal,
                 precio: parseFloat(formData.precio),
                 fechas,
-                incluye: formData.incluye.split(",").map((s) => s.trim()),
-                noIncluye: formData.noIncluye.split(",").map((s) => s.trim()),
+                incluye: typeof formData.incluye === "string" ? formData.incluye.split(",").map(s => s.trim()) : formData.incluye,
+                noIncluye: typeof formData.noIncluye === "string" ? formData.noIncluye.split(",").map(s => s.trim()) : formData.noIncluye,
                 faq,
                 galeria: [...galeria, ...nuevasImagenes],
+                origen: origenes, // ✅ array de origenes seleccionado
+                noches: formData.noches, // ✅ número
+                dias: formData.dias,     // ✅ número
+                mostrarLugares: formData.mostrarLugares // ✅ booleano
             };
 
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/trips`, {
@@ -170,7 +197,7 @@ export default function NuevoViajeForm() {
             });
 
             if (!res.ok) {
-                setSaving(false)
+                setSaving(false);
                 throw new Error("Error al agregar el viaje");
             }
 
@@ -179,29 +206,30 @@ export default function NuevoViajeForm() {
                 nombre: "",
                 portada: "",
                 destino: "",
-                origen: "",
+                origen: [],
                 precio: "",
-                incluye: "",
-                noIncluye: "",
+                incluye: [],
+                noIncluye: [],
                 region: "",
                 descripcion: "",
+                mostrarLugares: false,
+                noches: 0,
+                dias: 0,
             });
-            setFechas([{ salida: "", regreso: "" }]);
+            setOrigenes([]);
             setFaq([{ pregunta: "", respuesta: "" }]);
+            setFechas([{ salida: "", regreso: "" }]);
             setPreview("");
             setGaleria([]);
             setNuevaImagen(null);
             setImagenesGaleria([]);
             setImagenesAEliminar([]);
-            setSuccessMessage("Viaje guardado correctamente");
-
-            setSuccessMessage("¡Viaje agregado correctamente!");
-            setSaving(false)
-            setError(null);
         } catch (err) {
             setError(err.message);
+            setSaving(false);
         }
     };
+
 
     // FUNCIONES PARA MANEJAR LA GALERIA
 
@@ -260,7 +288,7 @@ export default function NuevoViajeForm() {
             {error && <p className="mb-4 text-red-600">{error}</p>}
 
             <form onSubmit={handleSubmit} className="space-y-4">
-                {["nombre", "destino", "origen", "precio", "region"].map((name) => (
+                {["nombre", "destino", "precio"].map((name) => (
                     <div key={name}>
                         <label className="block text-sm font-medium capitalize">{name}</label>
                         <input
@@ -272,7 +300,75 @@ export default function NuevoViajeForm() {
                         />
                     </div>
                 ))}
+                <div className="mb-4">
+                    <label className="block mb-1">Origen</label>
+                    <select
+                        onChange={(e) => agregarOrigen(e.target.value)}
+                        className="border rounded p-2 w-full"
+                        defaultValue=""
+                    >
+                        <option value="" disabled>Selecciona un origen</option>
+                        {opcionesOrigen.map((opcion) => (
+                            <option key={opcion} value={opcion}>{opcion}</option>
+                        ))}
+                    </select>
 
+                    <div className="flex flex-wrap gap-2 mt-2">
+                        {origenes.map((origen) => (
+                            <div key={origen} className="flex items-center bg-gray-200 rounded px-2 py-1">
+                                {origen}
+                                <button
+                                    onClick={() => eliminarOrigen(origen)}
+                                    className="ml-2 text-red-500"
+                                >×</button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+                <div className="mb-4">
+                    <label className="flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            name="mostrarLugares"
+                            checked={formData.mostrarLugares}
+                            onChange={(e) =>
+                                setFormData((prev) => ({ ...prev, [e.target.name]: e.target.checked }))
+                            }
+                        />
+                        Mostrar lugares disponibles
+                    </label>
+                </div>
+                <div className="mb-4">
+                    <label className="block mb-1">Noches</label>
+                    <select
+                        name="noches"
+                        value={formData.noches}
+                        onChange={(e) =>
+                            setFormData((prev) => ({ ...prev, [e.target.name]: Number(e.target.value) }))
+                        }
+                        className="border rounded p-2 w-full"
+                    >
+                        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15].map((d) => (
+                            <option key={d} value={d}>{d} día{d > 1 ? 's' : ''}</option>
+                        ))}
+                    </select>
+                </div>
+
+                <div className="mb-4">
+                    <label className="block mb-1">Das</label>
+                    <select
+                        name="dias"
+                        value={formData.dias}
+                        onChange={(e) =>
+                            setFormData((prev) => ({ ...prev, [e.target.name]: Number(e.target.value) }))
+                        }
+                        className="border rounded p-2 w-full"
+                    >
+                        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15].map((d) => (
+                            <option key={d} value={d}>{d} día{d > 1 ? 's' : ''}</option>
+                        ))}
+                    </select>
+                </div>
                 <div>
                     <label className="block text-sm font-medium">Descripción</label>
                     <textarea

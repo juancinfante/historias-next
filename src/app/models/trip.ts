@@ -8,8 +8,9 @@ export interface FechaViaje {
     portada: string
     descripcion: string
     destino: string
-    origen: string
-    region: string
+    origen: []
+    noches: Number
+    dias: Number
     fechas: FechaViaje[]
     incluye: string[]
     noIncluye: string[]
@@ -17,6 +18,7 @@ export interface FechaViaje {
     galeria: []
     precio: number
     slug: string
+    mostrarLugares: Boolean
     createdAt?: Date
     updatedAt?: Date
   }

@@ -133,7 +133,6 @@ export default async function Page({ params }) {
                                     </option>
                                 ))}
                             </select>
-                        <SelectorButacas />
 
                             <button
                                 type="submit"
