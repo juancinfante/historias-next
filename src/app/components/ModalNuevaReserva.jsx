@@ -11,6 +11,9 @@ export default function NuevoModalReserva({ onSuccess }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [tripID, setTripID] = useState('');
+  const [pagos, setPagos] = useState([]);
+  const [nuevoPago, setNuevoPago] = useState({ monto: '', metodo: 'efectivo', fecha: '' });
+  const [fechasDisponibles, setFechasDisponibles] = useState([]);
 
   const [nuevaReserva, setNuevaReserva] = useState({
     titulo: '',
@@ -19,7 +22,7 @@ export default function NuevoModalReserva({ onSuccess }) {
     tipoPago: 'total',
     estado: 'pagado',
     pasajeros: [{
-      nombre: '', 
+      nombre: '',
       apellido: '',
       email: '',
       tipo_documento: '',
@@ -29,6 +32,33 @@ export default function NuevoModalReserva({ onSuccess }) {
       notas: ''
     }],
   });
+
+
+
+  const handleNuevoPagoChange = (e) => {
+    const { name, value } = e.target;
+    setNuevoPago((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const agregarPago = () => {
+    if (!nuevoPago.monto || !nuevoPago.fecha) {
+      toast.error("Completa monto y fecha");
+      return;
+    }
+    setPagos((prev) => [...prev, nuevoPago]);
+    setNuevoPago({ monto: '', metodo: 'efectivo', fecha: '' });
+  };
+
+  const eliminarPago = (index) => {
+    setPagos((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const formatFecha = (isoString) => {
+    if (!isoString) return 'N/A';
+    const [year, month, day] = isoString.split("-");
+    return `${day}/${month}/${year}`;
+  };
+
 
   const handleChange = (e) => {
     const { id, value } = e.target;
@@ -45,7 +75,7 @@ export default function NuevoModalReserva({ onSuccess }) {
     setNuevaReserva((prev) => ({
       ...prev,
       pasajeros: [...prev.pasajeros, {
-        nombre: '', 
+        nombre: '',
         apellido: '',
         email: '',
         tipo_documento: '',
@@ -63,7 +93,7 @@ export default function NuevoModalReserva({ onSuccess }) {
   };
 
   const [viajes, setViajes] = useState([]);
-  
+
   useEffect(() => {
     const fetchViajes = async () => {
       try {
@@ -87,7 +117,7 @@ export default function NuevoModalReserva({ onSuccess }) {
       const res = await fetch(`${baseUrl}/api/pagar`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...nuevaReserva, precio: Number(nuevaReserva.precio), tripID }),
+        body: JSON.stringify({ ...nuevaReserva, precio: Number(nuevaReserva.precio), tripID, pagos: pagos }),
       });
       if (!res.ok) throw new Error('Error al crear la reserva');
       const data = await res.json();
@@ -117,6 +147,12 @@ export default function NuevoModalReserva({ onSuccess }) {
     }
   };
 
+  function formatearFecha(iso) {
+    if (!iso) return '';
+    const [year, month, day] = iso.split('-');
+    return `${day}/${month}/${year}`;
+  }
+
   return (
     <>
       <Button onClick={() => setIsOpen(true)} className="ml-2">
@@ -140,12 +176,15 @@ export default function NuevoModalReserva({ onSuccess }) {
                   value={nuevaReserva.tripID || ''}
                   onChange={(e) => {
                     const selectedTripId = e.target.value;
-                    setTripID(selectedTripId); // Update tripID state
+                    const viajeSeleccionado = viajes.find((v) => v._id === selectedTripId);
+
+                    setTripID(selectedTripId);
                     setNuevaReserva((prev) => ({
                       ...prev,
                       tripID: selectedTripId,
-                      titulo: viajes.find((v) => v._id === selectedTripId)?.nombre || '',
-                    }))
+                      titulo: viajeSeleccionado?.nombre || '',
+                    }));
+                    setFechasDisponibles(viajeSeleccionado?.fechas || []);
                   }}
                   className="w-full border rounded p-2"
                 >
@@ -157,8 +196,26 @@ export default function NuevoModalReserva({ onSuccess }) {
                   ))}
                 </select>
               </div>
+              {fechasDisponibles.length > 0 && (
+                <div>
+                  <Label htmlFor="fechaElegida">Fecha</Label>
+                  <select
+                    id="fechaElegida"
+                    value={nuevaReserva.fechaElegida || ''}
+                    onChange={(e) => setNuevaReserva((prev) => ({ ...prev, fechaElegida: e.target.value }))}
+                    className="w-full border rounded p-2"
+                  >
+                    <option value="">Selecciona una fecha</option>
+                    {fechasDisponibles.map((f, index) => (
+                      <option key={index} value={formatFecha(f.salida)}>
+                        {formatearFecha(f.salida)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div>
-                <Label htmlFor="precio">Precio total</Label>
+                <Label htmlFor="precio">Monto</Label>
                 <Input id="precio" type="number" value={nuevaReserva.precio} onChange={handleChange} />
               </div>
               <div>
@@ -166,7 +223,7 @@ export default function NuevoModalReserva({ onSuccess }) {
                 <select id="metodoPago" value={nuevaReserva.metodoPago} onChange={handleChange} className="w-full border rounded p-2">
                   <option value="efectivo">Efectivo</option>
                   <option value="transferencia">Transferencia</option>
-                  <option value="mercado pago">Mercado Pago</option>
+                  <option value="mercado pago admin">Mercado Pago</option>
                 </select>
               </div>
               <div>
@@ -182,6 +239,71 @@ export default function NuevoModalReserva({ onSuccess }) {
                   <option value="pagado">Pagado</option>
                   <option value="pendiente">Pendiente</option>
                 </select>
+              </div>
+              <div className="space-y-2">
+                <Label>Pagos</Label>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <Input
+                    name="monto"
+                    placeholder="Monto"
+                    value={nuevoPago.monto}
+                    onChange={handleNuevoPagoChange}
+                    type="number"
+                  />
+                  <select
+                    name="metodo"
+                    value={nuevoPago.metodo}
+                    onChange={handleNuevoPagoChange}
+                    className="border rounded-md p-2 text-sm"
+                  >
+                    <option value="efectivo">Efectivo</option>
+                    <option value="mercado pago">Mercado Pago</option>
+                    <option value="transferencia">Transferencia</option>
+                    <option value="otro">Otro</option>
+                  </select>
+                  <Input
+                    name="fecha"
+                    type="date"
+                    value={nuevoPago.fecha}
+                    onChange={handleNuevoPagoChange}
+                  />
+                </div>
+
+                <Button type="button" onClick={agregarPago} size="sm" className="mt-2">
+                  Agregar Pago
+                </Button>
+
+                {pagos.length > 0 && (
+                  <table className="w-full border mt-2 text-sm">
+                    <thead>
+                      <tr className="bg-gray-100">
+                        <th className="border px-2 py-1">Monto</th>
+                        <th className="border px-2 py-1">Método</th>
+                        <th className="border px-2 py-1">Fecha</th>
+                        <th className="border px-2 py-1">Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pagos.map((pago, index) => (
+                        <tr key={index}>
+                          <td className="border px-2 py-1">${pago.monto}</td>
+                          <td className="border px-2 py-1 capitalize">{pago.metodo}</td>
+                          <td className="border px-2 py-1">{formatFecha(pago.fecha)}</td>
+                          <td className="border px-2 py-1">
+                            <button
+                              type="button"
+                              onClick={() => eliminarPago(index)}
+                              className="text-red-500 text-xs"
+                            >
+                              Eliminar
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
               </div>
 
               <div className="space-y-4">

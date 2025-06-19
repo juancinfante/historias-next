@@ -104,34 +104,43 @@ export default function ReservasPage() {
 
   // Buscar filtrando
   const handleBuscar = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError(null);
+  e.preventDefault();
+  setIsLoading(true);
+  setError(null);
 
-    try {
-      const params = new URLSearchParams();
+  try {
+    const params = new URLSearchParams();
 
-      if (codigo) params.append("codigo", codigo);
-      if (destinoSeleccionado) params.append("destino", destinoSeleccionado);
-      if (fechaSeleccionada) params.append("fechaElegida", fechaSeleccionada);
-      if (metodoPago) params.append("metodoPago", metodoPago);
-      if (tipoPago) params.append("tipoPago", tipoPago);
-      if (estadoPago) params.append("estado", estadoPago);
+    if (codigo) params.append("codigo", codigo);
+    if (destinoSeleccionado) params.append("destino", destinoSeleccionado);
 
-      const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/reservas${params.toString() ? "?" + params.toString() : ""}`;
-
-      const res = await fetch(url);
-      const result = await res.json();
-      setData(result.reservas);
-      setCantidad(result.total);
-    } catch (err) {
-      console.error(err);
-      setError("Error al filtrar las reservas");
-    } finally {
-      setIsLoading(false);
+    if (fechaSeleccionada) {
+      const fechaFormateada = new Date(fechaSeleccionada).toLocaleDateString("es-AR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
+      params.append("fechaElegida", fechaFormateada);
     }
 
-  };
+    if (metodoPago) params.append("metodoPago", metodoPago);
+    if (tipoPago) params.append("tipoPago", tipoPago);
+    if (estadoPago) params.append("estado", estadoPago);
+
+    const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/reservas${params.toString() ? "?" + params.toString() : ""}`;
+
+    const res = await fetch(url);
+    const result = await res.json();
+    setData(result.reservas);
+    setCantidad(result.total);
+  } catch (err) {
+    console.error(err);
+    setError("Error al filtrar las reservas");
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   const reservationColumns = columns(fetchReservas);
 

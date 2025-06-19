@@ -32,7 +32,7 @@ export const columns = (onRefreshData) => [ // MODIFICADO: Ahora 'columns' es un
   },
   {
     accessorKey: "precio",
-    header: () => <div className="">Precio</div>,
+    header: () => <div className="">Monto</div>,
     cell: ({ row }) => {
       const amount = parseFloat(row.getValue("precio"))
       const formatted = new Intl.NumberFormat("en-US", {
@@ -92,7 +92,7 @@ export const columns = (onRefreshData) => [ // MODIFICADO: Ahora 'columns' es un
   },
   {
     accessorKey: "fechaReserva",
-    header: "Fecha de Reserva",
+    header: "Realizado el",
   },
   {
     header: "Ver/Editar",
@@ -116,7 +116,14 @@ export const columns = (onRefreshData) => [ // MODIFICADO: Ahora 'columns' es un
           toast.error("Completa monto y fecha");
           return;
         }
-        setPagos((prev) => [...prev, nuevoPago]);
+
+        // Formatear fecha a DD/MM/YYYY antes de agregar
+        const pagoFormateado = {
+          ...nuevoPago,
+          fecha: formatFecha(nuevoPago.fecha)
+        };
+
+        setPagos((prev) => [...prev, pagoFormateado]);
         setNuevoPago({ monto: '', metodo: 'efectivo', fecha: '' });
       };
 
@@ -126,7 +133,8 @@ export const columns = (onRefreshData) => [ // MODIFICADO: Ahora 'columns' es un
 
       const formatFecha = (isoString) => {
         if (!isoString) return 'N/A';
-        return new Date(isoString).toLocaleString();
+        const [year, month, day] = isoString.split("-");
+        return `${day}/${month}/${year}`;
       };
 
       const handleReservaChange = (e) => {
@@ -308,8 +316,8 @@ export const columns = (onRefreshData) => [ // MODIFICADO: Ahora 'columns' es un
                       </div>
 
                       <div className="flex flex-col gap-2 col-span-1 sm:col-span-2">
-                        <Label htmlFor="fechaReserva">Fecha Reserva:</Label>
-                        <Input id="fechaReserva" value={formatFecha(editedReserva.fechaReserva)} readOnly />
+                        <Label htmlFor="fechaReserva">Fecha Elegida</Label>
+                        <Input id="fechaReserva" value={editedReserva.fechaElegida} readOnly />
                       </div>
                     </div>
 
@@ -318,20 +326,34 @@ export const columns = (onRefreshData) => [ // MODIFICADO: Ahora 'columns' es un
                     {pagos.length === 0 ? (
                       <p className="text-gray-500">No hay pagos registrados.</p>
                     ) : (
-                      <div className="space-y-2">
-                        {pagos.map((pago, index) => (
-                          <div key={index} className="flex items-center gap-2 border p-2 rounded-md">
-                            <span className="flex-1 text-sm">${pago.monto} - {pago.metodo} - {pago.fecha}</span>
-                            <button
-                              type="button"
-                              onClick={() => eliminarPago(index)}
-                              className="text-red-500 text-xs"
-                            >
-                              Eliminar
-                            </button>
-                          </div>
-                        ))}
-                      </div>
+                      <table className="w-full table-auto border border-gray-300 rounded-md">
+                        <thead>
+                          <tr className="bg-gray-100 text-left text-sm">
+                            <th className="border px-3 py-2">Monto</th>
+                            <th className="border px-3 py-2">Método</th>
+                            <th className="border px-3 py-2">Fecha</th>
+                            <th className="border px-3 py-2">Acciones</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {pagos.map((pago, index) => (
+                            <tr key={index} className="text-sm">
+                              <td className="border px-3 py-2">${pago.monto}</td>
+                              <td className="border px-3 py-2">{pago.metodo}</td>
+                              <td className="border px-3 py-2">{formatFecha(pago.fecha)}</td>
+                              <td className="border px-3 py-2">
+                                <button
+                                  type="button"
+                                  onClick={() => eliminarPago(index)}
+                                  className="text-red-500 text-xs"
+                                >
+                                  Eliminar
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     )}
 
                     {/* Formulario para agregar pago */}

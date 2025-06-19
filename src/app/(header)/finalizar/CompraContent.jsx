@@ -35,7 +35,13 @@ export default function CompraContent() {
 
 
 
-    const formatear = (f) => new Date(f).toLocaleDateString('es-AR')
+    const formatear = (f) => {
+        return new Date(f).toLocaleDateString('es-AR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+    };
     let fecha, precioUnitario, subtotal
     if (trip) {
         fecha = trip.fechas[fechaIndex]
@@ -94,8 +100,8 @@ export default function CompraContent() {
                 metodoPago,
                 tipoPago, // 'total' o 'reserva'
                 precio: tipoPago === 'reserva' ? subtotal * 0.3 : subtotal,
-                estado: metodoPago === 'transferencia' ? 'pendiente' : ''
-                
+                estado: metodoPago === 'transferencia' ? 'pendiente' : '',
+                fechaElegida: formatear(fecha.salida),
             }
 
             const res = await fetch('/api/pagar', {
@@ -110,13 +116,13 @@ export default function CompraContent() {
 
             if (metodoPago === 'mercadopago' && result.init_point) {
                 window.location.href = result.init_point;
-              } else if (metodoPago === 'transferencia' && result.codigo) {
+            } else if (metodoPago === 'transferencia' && result.codigo) {
                 // Redirige a la confirmación de reserva
                 router.push(`/confirmacion?id=${result.codigo}`);
 
-              } else {
+            } else {
                 alert('Error al procesar la reserva. Intenta de nuevo.');
-              }
+            }
 
         } catch (error) {
             console.error('Error al procesar el pago:', error);
@@ -302,7 +308,7 @@ export default function CompraContent() {
                                             Reserva (30%)
                                         </label>
                                     </div>
-                                    
+
                                     {tipoPago === 'reserva' && (
                                         <div className="bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 p-4 mb-4 rounded">
                                             <p className="font-semibold">Estás pagando una reserva (30%)</p>
@@ -383,7 +389,7 @@ export default function CompraContent() {
                                     />
                                     <span className="text-sm">Acepto los <a href="#" className="underline">términos y condiciones</a> *</span>
                                 </label>
-                                
+
 
                                 <button
                                     type="button"

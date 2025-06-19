@@ -14,11 +14,19 @@ const mercadopago = new MercadoPagoConfig({
 const client = await clientPromise;
 const db = client.db('historias');
 
+function obtenerFechaFormateada() {
+  const hoy = new Date();
+  const dia = String(hoy.getDate()).padStart(2, '0');
+  const mes = String(hoy.getMonth() + 1).padStart(2, '0'); // Los meses empiezan en 0
+  const anio = hoy.getFullYear();
+  return `${dia}/${mes}/${anio}`;
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const { titulo, pasajeros, precio, tipoPago, metodoPago, tripID, estado } = await req.json();
+    const { titulo, pasajeros, precio, tipoPago, metodoPago, tripID, estado, fechaElegida, pagos } = await req.json();
 
-    if (metodoPago === 'transferencia' || metodoPago === 'efectivo') {
+    if (metodoPago === 'transferencia' || metodoPago === 'efectivo' ||  metodoPago === 'mercado pago admin') {
       
       // Creamos una reserva pendiente
       const codigo = await generarCodigoUnico();
@@ -34,6 +42,8 @@ export async function POST(req: NextRequest) {
         codigo,
         precio,
         tipoPago,
+        fechaElegida,
+        ...(pagos && { pagos }),
       };
 
       await db.collection('reservas').insertOne(nuevaReserva);
@@ -66,6 +76,12 @@ export async function POST(req: NextRequest) {
           tipoPago,
           titulo,
           cantidad: pasajeros.length,
+          fechaElegida,
+          pagos: [{monto: precio, metodo: "mercado pago", fecha: new Date()}],
+        },
+        back_urls: {
+          success: `${process.env.NEXT_PUBLIC_BASE_URL}/pagar/exito`,
+          failure: `${process.env.NEXT_PUBLIC_BASE_URL}/pagar/error`,
         },
       },
     });

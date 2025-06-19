@@ -1,23 +1,24 @@
 export interface FechaViaje {
-    salida: string // ISO format
+    salida: String // ISO format
     regreso: string
   }
   
   export interface Trip {
-    nombre: string
-    portada: string
-    descripcion: string
-    destino: string
+    nombre: String
+    portada: String
+    descripcion: String
+    destino: String
     origen: []
     noches: Number
     dias: Number
     fechas: FechaViaje[]
-    incluye: string[]
-    noIncluye: string[]
-    faq: string[]
+    incluye: String[]
+    noIncluye: String[]
+    faq: String[]
     galeria: []
-    precio: number
-    slug: string
+    precio: Number
+    slug: String
+    lugares: Number
     mostrarLugares: Boolean
     createdAt?: Date
     updatedAt?: Date

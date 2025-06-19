@@ -14,6 +14,18 @@ export default function PaquetesContent() {
     const [ordenPrecio, setOrdenPrecio] = useState('')
     const [loading, setLoading] = useState(true)
 
+    function formatFecha(fechaIso) {
+        if (!fechaIso) return ''
+        const fecha = new Date(fechaIso)
+        const dia = fecha.toLocaleDateString('es-AR', { day: '2-digit' })
+        const mes = fecha.toLocaleDateString('es-AR', { month: 'long' })
+        return `${dia} - ${capitalize(mes)}`
+    }
+
+    function capitalize(text) {
+        return text.charAt(0).toUpperCase() + text.slice(1)
+    }
+
     const fetchTrips = async () => {
         setLoading(true)
         const params = new URLSearchParams()
@@ -49,7 +61,7 @@ export default function PaquetesContent() {
 
 
         try {
-            const res = await fetch(`/api/trips?${params.toString()}&limit=10`)
+            const res = await fetch(`/api/trips?${params.toString()}&limit=20`)
             const data = await res.json()
 
             let fetchedTrips = Array.isArray(data.data) ? data.data : []
@@ -316,145 +328,57 @@ export default function PaquetesContent() {
                                         <p className="text-center text-gray-500">No se encontraron viajes.</p>
                                     ) : (
                                         <>
-                                        <div
-                                                    className="bg-white rounded shadow flex flex-col md:flex-row overflow-hidden md:h-[230px]"
-                                                >
-                                                    <img
-                                                        className="w-full h-60 md:w-1/3 md:h-full object-cover"
-                                                    />
-                                                    <div className="flex flex-col h-full p-3 gap-1">
-                                                        <h1 className='font-bold text-2xl text-gray-700'>A Tilcara voy con Terra</h1>
-                                                        <div className='flex gap-1'>
-                                                            <span className="inline-flex items-center text-xs rounded-md ps-2 pe-2 bg-[var(--primario-light)] font-semibold text-[var(--primario-dark)] w-fit">
-                                                                <MapPinned className="w-[14px] mr-1" />
-                                                                Tilcara, Jujuy
-                                                            </span>
-                                                            {/* <span className="inline-flex items-center text-xs rounded-md ps-2 pe-2 bg-red-200 text-red-950 font-semibold w-fit">
+                                            <div className="grid gap-6">
+                                                {trips.map((trip) => (
+                                                    <div
+                                                        key={trip._id}
+                                                        className="bg-white rounded shadow flex flex-col md:flex-row overflow-hidden md:h-[230px]"
+                                                    >
+                                                        <img
+                                                            src={trip.portada}
+                                                            className="w-full h-60 md:w-1/3 md:h-full object-cover"
+                                                            alt={trip.destino}
+                                                        />
+                                                        <div className="flex flex-col h-full p-3 gap-1">
+                                                            <h1 className='font-bold text-2xl text-gray-700'>{trip.nombre}</h1>
+                                                            <div className='flex gap-1'>
+                                                                <span className="inline-flex items-center text-xs rounded-md ps-2 pe-2 bg-[var(--primario-light)] font-semibold text-[var(--primario-dark)] w-fit">
+                                                                    <MapPinned className="w-[14px] mr-1" />
+                                                                    {trip.destino}
+                                                                </span>
+                                                                {/* <span className="inline-flex items-center text-xs rounded-md ps-2 pe-2 bg-red-200 text-red-950 font-semibold w-fit">
                                                                 <Siren className="w-[14px] mr-1" />
                                                                 Quedan 6 lugares
                                                             </span> */}
+                                                            </div>
+                                                            <span className='inline-flex items-center text-gray-500 text-sm pe-2 w-fit'>
+                                                                <Bus className='w-4 mr-1' />
+                                                                Saliendo desde {Array.isArray(trip.origen) ? trip.origen.join(', ') : trip.origen}</span>
+                                                            <h1 className='font-semibold'>{trip.noches} NOCHES - {trip.dias} DÍAS</h1>
+                                                            {Array.isArray(trip.fechas) && trip.fechas.length > 0 && (
+                                                                <>
+                                                                    {trip.fechas.slice(0, 2).map((f, idx) => (
+                                                                        <p key={idx} className="text-gray-700 text-xs">
+                                                                            Salida <b>{formatFecha(f.salida)}</b> Regreso <b>{formatFecha(f.regreso)}</b>
+                                                                        </p>
+                                                                    ))}
+                                                                </>
+                                                            )}
                                                         </div>
-                                                        <span className='inline-flex items-center text-gray-500 text-sm pe-2 w-fit'>
-                                                            <Bus className='w-4 mr-1' />
-                                                            Saliendo desde Santiago del Estero</span>
-                                                        <h1 className='font-semibold'>6 NOCHES - 5 DÍAS</h1>
-                                                        <div className='flex flex-col mt-5 text-gray-700 text-xs'>
-                                                            <span>Fechas:</span>
-                                                            <span>Salida <b> Vie 24 Abr</b> Regreso <b> Lun 4 Jun</b></span>
-                                                            <span>Salida <b> Mar 12 Jun</b> Regreso <b> Mie 24 Jun</b></span>
-                                                        </div>
-                                                    </div>
                                                         {/* <h1 className='bg-red-200 text-red-950 font-semibold w-fit ml-auto p-1'>Ultimos lugares!</h1> */}
-                                                    <div className="flex flex-col border-l-1 text-gray-700 ml-auto p-3 relative">
-                                                        <h1 className='bg-green-200 text-green-950 w-fit ml-auto pt-1 pb-1 p-2 text-sm rounded-bl-md absolute top-0 right-0'>0/60 lugares disponibles</h1>
+                                                        <div className="flex flex-col border-l-1 text-gray-700 ml-auto p-3 relative">
+                                                            <h1 className='bg-green-200 text-green-950 w-fit ml-auto pt-1 pb-1 p-2 text-sm rounded-bl-md absolute top-0 right-0'>6/60 lugares disponibles</h1>
                                                             <span className='text-xs text-gray-500 mt-[40px]'>Precio final por persona</span>
-                                                            <div className="flex font-bold items-center gap-0.5 text-gray-700"><span className='text-md '>$</span><span className='text-3xl'>405.500</span></div>
+                                                            <div className="flex font-bold items-center gap-0.5 text-gray-700"><span className='text-md '>$</span><span className='text-3xl'>{Number(trip.precio).toLocaleString('es-AR')}</span></div>
                                                             <span className='text-xs'>Incluye impuestos, tasas y cargos</span>
-                                                            {/* <button className='bg-[var(--secundario)] text-white p-2 rounded-2xl mt-2 cursor-pointer'>Siguiente</button> */}
-                                                        <button className='bg-gray-200 text-gray-500 p-2 rounded-2xl mt-2'>Completo</button>
-                                                    </div>
-                                                    {/* <div>
-                                                            <span className='w-full flex items-center justify-between'>
-                                                                <h3 className="text-lg font-bold mb-1">{trip.nombre}</h3>
-                                                                <span className="text-sm text-blue-500">Ultimos lugares!</span>
-                                                            </span>
-                                                            <p className="text-sm text-gray-600">
-                                                                <strong className="text-gray-800">Destino:</strong> {trip.destino}
-                                                            </p>
-                                                            <p className="text-sm text-gray-600">
-                                                                <strong className="text-gray-800">Origen:</strong> {trip.origen}
-                                                            </p>
-                                                            <p className="text-sm text-gray-600">
-                                                                <strong className="text-gray-800">Salida:</strong> {formatearFechaLarga(trip.fechas[0].salida)}
-                                                            </p>
-                                                            <p className="text-sm text-gray-600">
-                                                                <strong className="text-gray-800">Regreso:</strong> {formatearFechaLarga(trip.fechas[0].regreso)}
-                                                            </p>
-                                                        </div>
-                                                        <div className="flex items-center justify-between mt-4">
-                                                            <p className="text-lg font-bold text-blue-900">${trip.precio}</p>
-                                                            <Link
-                                                                href={`/paquete/${trip.slug}`}
-                                                                className="bg-[rgb(43,52,71)] hover:bg-teal-600 text-white px-4 py-2 text-sm rounded transition"
-                                                            >
-                                                                Reservar
+                                                            <Link href={`/paquete/${trip.slug}`} className='bg-[var(--secundario)] text-white p-2 rounded-2xl mt-2 cursor-pointer'>
+                                                            Siguiente
                                                             </Link>
-                                                            <p>COMPLETO</p>
-                                                        </div> */}
-                                                </div>
-                                        <div className="grid gap-6">
-                                            {trips.map((trip) => (
-                                                <div
-                                                key={trip._id}
-                                                className="bg-white rounded shadow flex flex-col md:flex-row overflow-hidden md:h-[230px]"
-                                                >
-                                                    <img
-                                                        src={trip.portada}
-                                                        className="w-full h-60 md:w-1/3 md:h-full object-cover"
-                                                        alt={trip.destino}
-                                                    />
-                                                    <div className="flex flex-col h-full p-3 gap-1">
-                                                        <h1 className='font-bold text-2xl text-gray-700'>A Tilcara voy con Terra</h1>
-                                                        <div className='flex gap-1'>
-                                                            <span className="inline-flex items-center text-xs rounded-md ps-2 pe-2 bg-[var(--primario-light)] font-semibold text-[var(--primario-dark)] w-fit">
-                                                                <MapPinned className="w-[14px] mr-1" />
-                                                                Tilcara, Jujuy
-                                                            </span>
-                                                            {/* <span className="inline-flex items-center text-xs rounded-md ps-2 pe-2 bg-red-200 text-red-950 font-semibold w-fit">
-                                                                <Siren className="w-[14px] mr-1" />
-                                                                Quedan 6 lugares
-                                                            </span> */}
                                                         </div>
-                                                        <span className='inline-flex items-center text-gray-500 text-sm pe-2 w-fit'>
-                                                            <Bus className='w-4 mr-1' />
-                                                            Saliendo desde Santiago del Estero</span>
-                                                        <h1 className='font-semibold'>6 NOCHES - 5 DÍAS</h1>
-                                                        <div className='flex flex-col mt-5 text-gray-700 text-xs'>
-                                                            <span>Fechas:</span>
-                                                            <span>Salida <b> Vie 24 Abr</b> Regreso <b> Lun 4 Jun</b></span>
-                                                            <span>Salida <b> Mar 12 Jun</b> Regreso <b> Mie 24 Jun</b></span>
-                                                        </div>
-                                                    </div>
-                                                        {/* <h1 className='bg-red-200 text-red-950 font-semibold w-fit ml-auto p-1'>Ultimos lugares!</h1> */}
-                                                    <div className="flex flex-col border-l-1 text-gray-700 ml-auto p-3 relative">
-                                                        <h1 className='bg-green-200 text-green-950 w-fit ml-auto pt-1 pb-1 p-2 text-sm rounded-bl-md absolute top-0 right-0'>6/60 lugares disponibles</h1>
-                                                            <span className='text-xs text-gray-500 mt-[40px]'>Precio final por persona</span>
-                                                            <div className="flex font-bold items-center gap-0.5 text-gray-700"><span className='text-md '>$</span><span className='text-3xl'>405.500</span></div>
-                                                            <span className='text-xs'>Incluye impuestos, tasas y cargos</span>
-                                                            <button className='bg-[var(--secundario)] text-white p-2 rounded-2xl mt-2 cursor-pointer'>Siguiente</button>
-                                                    </div>
                                                         {/* <button className='bg-gray-200 text-gray-500 p-2 rounded-2xl mt-2'>Completo</button> */}
-                                                    {/* <div>
-                                                            <span className='w-full flex items-center justify-between'>
-                                                                <h3 className="text-lg font-bold mb-1">{trip.nombre}</h3>
-                                                                <span className="text-sm text-blue-500">Ultimos lugares!</span>
-                                                            </span>
-                                                            <p className="text-sm text-gray-600">
-                                                                <strong className="text-gray-800">Destino:</strong> {trip.destino}
-                                                            </p>
-                                                            <p className="text-sm text-gray-600">
-                                                                <strong className="text-gray-800">Origen:</strong> {trip.origen}
-                                                            </p>
-                                                            <p className="text-sm text-gray-600">
-                                                                <strong className="text-gray-800">Salida:</strong> {formatearFechaLarga(trip.fechas[0].salida)}
-                                                            </p>
-                                                            <p className="text-sm text-gray-600">
-                                                                <strong className="text-gray-800">Regreso:</strong> {formatearFechaLarga(trip.fechas[0].regreso)}
-                                                            </p>
-                                                        </div>
-                                                        <div className="flex items-center justify-between mt-4">
-                                                            <p className="text-lg font-bold text-blue-900">${trip.precio}</p>
-                                                            <Link
-                                                                href={`/paquete/${trip.slug}`}
-                                                                className="bg-[rgb(43,52,71)] hover:bg-teal-600 text-white px-4 py-2 text-sm rounded transition"
-                                                            >
-                                                                Reservar
-                                                            </Link>
-                                                            <p>COMPLETO</p>
-                                                        </div> */}
-                                                </div>
-                                            ))}
-                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </>
                                     )}
                             </div>

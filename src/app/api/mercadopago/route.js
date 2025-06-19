@@ -40,12 +40,14 @@ export async function POST(request) {
         precio: metadata.precio,
         fechaReserva: new Date(),
         codigo: codigo,
+        fechaElegida: metadata.fecha_elegida, // Fecha elegida para el viaje
+        pagos: metadata.pagos,
       };
 
       await db.collection('reservas').insertOne(nuevaReserva);
 
       await sendConfirmationEmail({
-        email: "juaninfantejj@gmail.com",
+        email: metadata.pasajeros[0].email,
         tipoPago: metadata.tipo_pago,
         nombre: metadata.pasajeros[0].nombre + " " + metadata.pasajeros[0].apellido,
         codigoReserva: codigo,

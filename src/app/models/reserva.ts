@@ -7,6 +7,7 @@ export interface Reserva {
     estado: 'pendiente' | 'pagado' | 'cancelado'
     fechaReserva: Date
     codigo: string // Nuevo campo para el código único
-    pagos: []
+    pagos: [],
+    fechaElegida: String // Fecha elegida para el viaje
   }
   

@@ -57,7 +57,8 @@ export async function POST(req: NextRequest) {
       faq,
       dias,
       noches,
-      mostrarLugares
+      mostrarLugares,
+      lugares
     } = body as Trip
 
     // Validación básica
@@ -91,7 +92,8 @@ export async function POST(req: NextRequest) {
       noches,
       mostrarLugares,
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
+      lugares
     }
 
     const result = await db.collection('trips').insertOne(newTrip)

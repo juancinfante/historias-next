@@ -32,6 +32,7 @@ export default function NuevoViajeForm() {
         mostrarLugares: false, // booleano (por defecto true)
         noches: 0,            // número
         dias: 0,              // número
+        lugares: 0,          // número
     });
 
 
@@ -49,6 +50,7 @@ export default function NuevoViajeForm() {
             mostrarLugares: false,
             noches: 0,
             dias: 0,
+            lugares: 0,
         });
         setFaq([{ pregunta: "", respuesta: "" }]);
         setFechas([{ salida: "", regreso: "" }]);
@@ -187,9 +189,10 @@ export default function NuevoViajeForm() {
                 origen: origenes, // ✅ array de origenes seleccionado
                 noches: formData.noches, // ✅ número
                 dias: formData.dias,     // ✅ número
-                mostrarLugares: formData.mostrarLugares // ✅ booleano
+                mostrarLugares: formData.mostrarLugares, // ✅ booleano
+                lugares: formData.lugares, // ✅ número
             };
-
+            console.log(payload)
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/trips`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -215,6 +218,7 @@ export default function NuevoViajeForm() {
                 mostrarLugares: false,
                 noches: 0,
                 dias: 0,
+                lugares: 0,
             });
             setOrigenes([]);
             setFaq([{ pregunta: "", respuesta: "" }]);
@@ -288,11 +292,11 @@ export default function NuevoViajeForm() {
             {error && <p className="mb-4 text-red-600">{error}</p>}
 
             <form onSubmit={handleSubmit} className="space-y-4">
-                {["nombre", "destino", "precio"].map((name) => (
+                {["nombre", "destino", "precio", "lugares"].map((name) => (
                     <div key={name}>
                         <label className="block text-sm font-medium capitalize">{name}</label>
                         <input
-                            type={name === "precio" ? "number" : "text"}
+                            type={name === "precio" || name === "lugares" ? "number" : "text"}
                             name={name}
                             value={formData[name]}
                             onChange={handleChange}
@@ -355,7 +359,7 @@ export default function NuevoViajeForm() {
                 </div>
 
                 <div className="mb-4">
-                    <label className="block mb-1">Das</label>
+                    <label className="block mb-1">Dias</label>
                     <select
                         name="dias"
                         value={formData.dias}
