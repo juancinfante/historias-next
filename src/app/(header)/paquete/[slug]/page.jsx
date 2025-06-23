@@ -2,6 +2,7 @@ import Image from 'next/image'
 import React from 'react'
 import SelectorButacas from '@/components/SelectorButacas'
 import SliderGaleria from '@/components/SliderGaleria'
+import { CircleCheck, CircleX } from 'lucide-react'
 
 export default async function Page({ params }) {
     const { slug } = await params
@@ -56,14 +57,14 @@ export default async function Page({ params }) {
                         <h3 className="text-xl font-semibold mb-2">Incluye:</h3>
                         <ul className="text-gray-700 mb-6 list-none">
                             {trip.incluye?.map((item, i) => (
-                                <li key={i}>✅ {item}</li>
+                                <li key={i}><CircleCheck className='flex text-green-700'/> {item}</li>
                             ))}
                         </ul>
 
                         <h3 className="text-xl font-semibold mb-2">No incluye:</h3>
                         <ul className="text-gray-700 mb-6 list-none">
                             {trip.noIncluye?.map((item, i) => (
-                                <li key={i}>❌ {item}</li>
+                                <li key={i} className='flex'> <CircleX className='text-red-700'/> {item}</li>
                             ))}
                         </ul>
 

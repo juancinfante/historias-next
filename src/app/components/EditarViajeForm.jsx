@@ -14,6 +14,12 @@ export default function EditarViajeForm({ viaje }) {
     const [imagenesGaleria, setImagenesGaleria] = useState([]); // para subir nuevas imágenes (File[])
     const [imagenesAEliminar, setImagenesAEliminar] = useState([]); // Para almacenar las imágenes a eliminar
     const [saving, setSaving] = useState(false);
+    const [origenes, setOrigenes] = useState([]); // ← array de origenes (en lugar de string)
+    const [mostrarLugares, setMostrarLugares] = useState(true);
+    const [noches, setNoches] = useState(0);
+    const [dias, setDias] = useState(0);
+
+    const opcionesOrigen = ["Santiago del Estero", "Tucumán", "Córdoba", "Salta"]; // mismo array que en crear
 
     const [formData, setFormData] = useState({
         nombre: "",
@@ -25,6 +31,7 @@ export default function EditarViajeForm({ viaje }) {
         noIncluye: "",
         region: "",
         descripcion: "",
+        lugares: 0,
     });
 
     useEffect(() => {
@@ -32,19 +39,34 @@ export default function EditarViajeForm({ viaje }) {
             nombre: viaje.nombre || "",
             portada: viaje.portada || "",
             destino: viaje.destino || "",
-            origen: viaje.origen || "",
+            origen: [], // ← se maneja con origenes
             precio: viaje.precio || "",
             incluye: (viaje.incluye || []).join(", "),
             noIncluye: (viaje.noIncluye || []).join(", "),
             region: viaje.region || "",
             descripcion: viaje.descripcion || "",
+            lugares: viaje.lugares || 0
         });
+        setOrigenes(viaje.origen || []);
+        setMostrarLugares(typeof viaje.mostrarLugares === "boolean" ? viaje.mostrarLugares : true);
+        setNoches(viaje.noches || 0);
+        setDias(viaje.dias || 0);
         setFaq(viaje.faq?.length ? viaje.faq : [{ pregunta: "", respuesta: "" }]);
         setFechas(viaje.fechas?.length ? viaje.fechas : [{ salida: "", regreso: "" }]);
         setPreview(viaje.portada || "");
-        setLoading(false);
         setGaleria(viaje.galeria || []);
+        setLoading(false);
     }, [viaje]);
+
+    function agregarOrigen(origen) {
+        if (!origenes.includes(origen)) {
+            setOrigenes([...origenes, origen]);
+        }
+    }
+
+    function eliminarOrigen(origen) {
+        setOrigenes(origenes.filter(o => o !== origen));
+    }
 
     const handleFaqChange = (index, field, value) => {
         const nuevasFaq = [...faq];
@@ -102,80 +124,88 @@ export default function EditarViajeForm({ viaje }) {
     };
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
-         setSaving(true);
+    e.preventDefault();
+    setSaving(true);
+    setError(null);
+    setSuccessMessage("");
 
-        if (!formData.nombre || !formData.destino || !formData.origen || !formData.precio || isNaN(parseFloat(formData.precio))) {
-            setError("Completa todos los campos obligatorios y asegúrate que el precio sea un número.");
-            return;
+    if (!formData.nombre || !formData.destino || origenes.length === 0 || !formData.precio || isNaN(parseFloat(formData.precio))) {
+        setError("Completa todos los campos obligatorios y asegúrate que el precio sea un número.");
+        setSaving(false);
+        return;
+    }
+
+    if (fechas.some(f => !f.salida || !f.regreso)) {
+        setError("Todas las fechas deben tener salida y regreso.");
+        setSaving(false);
+        return;
+    }
+
+    try {
+        let portadaFinal = formData.portada;
+
+        if (nuevaImagen) {
+            portadaFinal = await subirImagenACloudinary();
         }
 
-        if (fechas.some(f => !f.salida || !f.regreso)) {
-            setError("Todas las fechas deben tener salida y regreso.");
-            return;
+        let nuevasImagenes = [];
+        if (imagenesGaleria.length > 0) {
+            nuevasImagenes = await subirImagenesGaleria();
         }
 
-        try {
-            let portadaFinal = formData.portada;
+        if (imagenesAEliminar.length > 0) {
+            await Promise.all(
+                imagenesAEliminar.map(async (publicId) => {
+                    try {
+                        const res = await fetch("/api/cloudinary", {
+                            method: "DELETE",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ publicId }),
+                        });
 
-            if (nuevaImagen) {
-                portadaFinal = await subirImagenACloudinary();
-            }
-
-            let nuevasImagenes = [];
-
-            if (imagenesGaleria.length > 0) {
-                nuevasImagenes = await subirImagenesGaleria();
-            }
-
-            // Eliminar imágenes existentes de Cloudinary si es necesario
-            if (imagenesAEliminar.length > 0) {
-                await Promise.all(
-                    imagenesAEliminar.map(async (publicId) => {
-                        try {
-                            const res = await fetch("/api/cloudinary", {
-                                method: "DELETE",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({ publicId }),
-                            });
-
-                            if (!res.ok) {
-                                const err = await res.json();
-                                console.error("Error al eliminar imagen:", err);
-                            }
-                        } catch (error) {
-                            console.error("Error al hacer DELETE:", error);
+                        if (!res.ok) {
+                            const err = await res.json();
+                            console.error("Error al eliminar imagen:", err);
                         }
-                    })
-                );
-            }
-
-            const payload = {
-                ...formData,
-                portada: portadaFinal,
-                precio: parseFloat(formData.precio),
-                fechas,
-                incluye: formData.incluye.split(",").map((s) => s.trim()),
-                noIncluye: formData.noIncluye.split(",").map((s) => s.trim()),
-                faq,
-                galeria: [...galeria, ...nuevasImagenes],
-            };
-
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/trips/${viaje._id}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
-            });
-
-            if (!res.ok) throw new Error("Error al actualizar el viaje");
-
-            setSuccessMessage("¡Viaje actualizado correctamente!");
-            setSaving(false);
-            setError(null);
-        } catch (err) {
-            setError(err.message);
+                    } catch (error) {
+                        console.error("Error al hacer DELETE:", error);
+                    }
+                })
+            );
         }
-    };
+
+        const payload = {
+            ...formData,
+            origen: origenes, // ✅ array de origenes
+            mostrarLugares,   // ✅ boolean
+            noches,           // ✅ número
+            dias,             // ✅ número
+            lugares: formData.lugares ? parseInt(formData.lugares) : 0, // ✅ número
+            portada: portadaFinal,
+            precio: parseFloat(formData.precio),
+            fechas,
+            incluye: typeof formData.incluye === "string" ? formData.incluye.split(",").map(s => s.trim()) : formData.incluye,
+            noIncluye: typeof formData.noIncluye === "string" ? formData.noIncluye.split(",").map(s => s.trim()) : formData.noIncluye,
+            faq,
+            galeria: [...galeria, ...nuevasImagenes],
+        };
+
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/trips/${viaje._id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+        });
+
+        if (!res.ok) throw new Error("Error al actualizar el viaje");
+
+        setSuccessMessage("¡Viaje actualizado correctamente!");
+        setSaving(false);
+    } catch (err) {
+        setError(err.message);
+        setSaving(false);
+    }
+};
+
 
     // FUNCIONES PARA MANEJAR LA GALERIA
 
@@ -234,7 +264,7 @@ export default function EditarViajeForm({ viaje }) {
             {error && <p className="mb-4 text-red-600">{error}</p>}
 
             <form onSubmit={handleSubmit} className="space-y-4">
-                {["nombre", "destino", "origen", "precio", "region"].map((name) => (
+                {["nombre", "destino", "precio"].map((name) => (
                     <div key={name}>
                         <label className="block text-sm font-medium capitalize">{name}</label>
                         <input
@@ -246,6 +276,80 @@ export default function EditarViajeForm({ viaje }) {
                         />
                     </div>
                 ))}
+
+                <div>
+                    <label className="block text-sm font-medium">Lugares disponibles</label>
+                    <input
+                        type="number"
+                        name="lugares"
+                        value={formData.lugares}
+                        onChange={handleChange}
+                        className="mt-1 block w-full border rounded px-3 py-2"
+                    />
+                </div>
+
+
+                <div className="mb-4">
+                    <label className="block mb-1">Origen</label>
+                    <select
+                        onChange={(e) => agregarOrigen(e.target.value)}
+                        className="border rounded p-2 w-full"
+                        defaultValue=""
+                    >
+                        <option value="" disabled>Selecciona un origen</option>
+                        {opcionesOrigen.map((opcion) => (
+                            <option key={opcion} value={opcion}>{opcion}</option>
+                        ))}
+                    </select>
+
+                    <div className="flex flex-wrap gap-2 mt-2">
+                        {origenes.map((origen) => (
+                            <div key={origen} className="flex items-center bg-gray-200 rounded px-2 py-1">
+                                {origen}
+                                <button
+                                    onClick={() => eliminarOrigen(origen)}
+                                    className="ml-2 text-red-500"
+                                >×</button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="mb-4">
+                    <label className="flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            checked={mostrarLugares}
+                            onChange={(e) => setMostrarLugares(e.target.checked)}
+                        />
+                        Mostrar lugares disponibles
+                    </label>
+                </div>
+                <div className="mb-4">
+                    <label className="block mb-1">Noches</label>
+                    <select
+                        value={noches}
+                        onChange={(e) => setNoches(Number(e.target.value))}
+                        className="border rounded p-2 w-full"
+                    >
+                        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15].map((n) => (
+                            <option key={n} value={n}>{n} noche{n !== 1 ? 's' : ''}</option>
+                        ))}
+                    </select>
+                </div>
+                <div className="mb-4">
+                    <label className="block mb-1">Días</label>
+                    <select
+                        value={dias}
+                        onChange={(e) => setDias(Number(e.target.value))}
+                        className="border rounded p-2 w-full"
+                    >
+                        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15].map((d) => (
+                            <option key={d} value={d}>{d} día{d !== 1 ? 's' : ''}</option>
+                        ))}
+                    </select>
+                </div>
+
 
                 <div>
                     <label className="block text-sm font-medium">Descripción</label>
@@ -371,16 +475,16 @@ export default function EditarViajeForm({ viaje }) {
                     disabled={saving}
                     className={`px-4 py-2 rounded ${saving ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'} text-white`}
                 >
-                    {saving ? 
-                    <>
-                    <span className="flex justify-center items-center gap-2">
-                        <p>
-                            Guardando
-                        </p>
-                        <Loader2 className="h-4 w-4 animate-spin" /> 
-                     </span>
-                    </>
-                    : 'Guardar cambios'}
+                    {saving ?
+                        <>
+                            <span className="flex justify-center items-center gap-2">
+                                <p>
+                                    Guardando
+                                </p>
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                            </span>
+                        </>
+                        : 'Guardar cambios'}
                 </button>
             </form>
         </div>
