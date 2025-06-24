@@ -36,14 +36,16 @@ export default function Navbar() {
             <button className={`md:hidden text-2xl z-50 ${isDark ? 'text-white' : 'text-black'}`} onClick={toggleMenu}>
               ☰
             </button>
-            <Image
-              id="logo"
-              src={isDark ? '/historias_blanco.png' : '/historias_negro.png'}
-              alt="logo"
-              width={150}
-              height={40}
-              className="object-contain"
-            />
+            <Link href="/">
+              <Image
+                id="logo"
+                src={isDark ? '/historias_blanco.png' : '/historias_negro.png'}
+                alt="logo"
+                width={150}
+                height={40}
+                className="object-contain"
+              />
+            </Link>
           </div>
 
           {/* Menú desktop */}

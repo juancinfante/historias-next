@@ -62,7 +62,7 @@ export async function DELETE(req) {
     }
   }
 
-  export async function deleteImage(publicId) {
+  async function deleteImage(publicId) {
     try {
       const result = await cloudinary.uploader.destroy(publicId);
       if (result.result === 'ok') {

@@ -4,6 +4,11 @@ import {
   SidebarProvider,
 } from "@/components/components/ui/sidebar"
 
+export const metadata = {
+  title: "Historias Argentinas",
+  description: "Descubre el norte Argentino",
+};
+
 export default function Page({ children }) {
   return (
     <SidebarProvider>

@@ -366,12 +366,14 @@ export default function PaquetesContent() {
                                                             )}
                                                         </div>
                                                         {/* <h1 className='bg-red-200 text-red-950 font-semibold w-fit ml-auto p-1'>Ultimos lugares!</h1> */}
-                                                        <div className="flex flex-col border-l-1 text-gray-700 ml-auto p-3 relative">
-                                                            <h1 className='bg-green-200 text-green-950 w-fit ml-auto pt-1 pb-1 p-2 text-sm rounded-bl-md absolute top-0 right-0'>6/60 lugares disponibles</h1>
-                                                            <span className='text-xs text-gray-500 mt-[40px]'>Precio final por persona</span>
+                                                        <div className="flex flex-col border-l-1 text-gray-700 md:ml-auto p-3 relative">
+                                                            <h1 className='hidden md:block bg-green-200 text-green-950 w-fit ml-auto pt-1 pb-1 p-2 text-sm rounded-bl-md absolute top-0 right-0'>
+                                                                0/{trip.lugares} lugares disponibles
+                                                            </h1>
+                                                            <span className='text-xs text-gray-500 md:mt-[40px]'>Precio final por persona</span>
                                                             <div className="flex font-bold items-center gap-0.5 text-gray-700"><span className='text-md '>$</span><span className='text-3xl'>{Number(trip.precio).toLocaleString('es-AR')}</span></div>
                                                             <span className='text-xs'>Incluye impuestos, tasas y cargos</span>
-                                                            <Link href={`/paquete/${trip.slug}`} className='bg-[var(--secundario)] text-white p-2 rounded-2xl mt-2 cursor-pointer'>
+                                                            <Link href={`/paquete/${trip.slug}`} className='bg-[var(--secundario)] text-white p-2 rounded-2xl mt-2 cursor-pointer text-center'>
                                                             Siguiente
                                                             </Link>
                                                         </div>
