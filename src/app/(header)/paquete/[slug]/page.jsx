@@ -24,7 +24,7 @@ export async function generateMetadata({ params }) {
         title: `${trip.nombre} | Historias Argentinas`,
         description: `Explorá el viaje a ${trip.destino} con ${trip.noches} noches y ${trip.dias} días. Salida desde ${trip.origen}.`,
         openGraph: {
-            title: `${trip.nombre} | Historias de Viaje`,
+            title: `${trip.nombre} | Historias Argentinas`,
             description: `Viví la experiencia de viajar a ${trip.destino}. Incluye transporte, alojamiento y mucho más.`,
             images: [
                 {
@@ -37,7 +37,7 @@ export async function generateMetadata({ params }) {
         },
         twitter: {
             card: 'summary_large_image',
-            title: `${trip.nombre} | Historias de Viaje`,
+            title: `${trip.nombre} | Historias Argentinas`,
             description: `Viví la experiencia de viajar a ${trip.destino}.`,
             images: [trip.portada],
         },
