@@ -294,7 +294,7 @@ export default function NuevoViajeForm() {
             <form onSubmit={handleSubmit} className="space-y-4">
                 {["nombre", "destino", "precio", "lugares"].map((name) => (
                     <div key={name}>
-                        <label className="block text-sm font-medium capitalize">{name}</label>
+                        <label className="block text-sm font-medium capitalize">{name == "precio" ? "Precio (sin puntos ni comas)" : name}</label>
                         <input
                             type={name === "precio" || name === "lugares" ? "number" : "text"}
                             name={name}

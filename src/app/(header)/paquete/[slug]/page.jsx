@@ -15,19 +15,22 @@ export default async function Page({ params }) {
     const trip = await res.json()
 
     function formatearFechaLarga(fechaIso) {
-        const fecha = new Date(fechaIso);
+        if (!fechaIso) return ''
+
+        const [year, month, day] = fechaIso.split('-').map(Number)
+        const fecha = new Date(year, month - 1, day) // mes base 0
 
         const opciones = {
             weekday: 'long',
             day: 'numeric',
             month: 'long',
             year: 'numeric'
-        };
+        }
 
-        const fechaFormateada = fecha.toLocaleDateString('es-AR', opciones);
+        const fechaFormateada = fecha.toLocaleDateString('es-AR', opciones)
 
         // Capitalizar la primera letra
-        return fechaFormateada.charAt(0).toUpperCase() + fechaFormateada.slice(1);
+        return fechaFormateada.charAt(0).toUpperCase() + fechaFormateada.slice(1)
     }
     return (
         <>
@@ -57,14 +60,14 @@ export default async function Page({ params }) {
                         <h3 className="text-xl font-semibold mb-2">Incluye:</h3>
                         <ul className="text-gray-700 mb-6 list-none">
                             {trip.incluye?.map((item, i) => (
-                                <li key={i} className='flex gap-2'><CircleCheck className='flex text-green-700'/> {item}</li>
+                                <li key={i} className='flex gap-2'><CircleCheck className='flex text-green-700' /> {item}</li>
                             ))}
                         </ul>
 
                         <h3 className="text-xl font-semibold mb-2">No incluye:</h3>
                         <ul className="text-gray-700 mb-6 list-none">
                             {trip.noIncluye?.map((item, i) => (
-                                <li key={i} className='flex gap-2'> <CircleX className='text-red-700'/> {item}</li>
+                                <li key={i} className='flex gap-2'> <CircleX className='text-red-700' /> {item}</li>
                             ))}
                         </ul>
 
@@ -111,9 +114,9 @@ export default async function Page({ params }) {
                                                 {formatearFechaLarga(fecha.salida)} →{' '}
                                                 {formatearFechaLarga(fecha.regreso)}
                                             </span>
-                                            <span className="text-gray-800 font-semibold">
+                                            {/* <span className="text-gray-800 font-semibold">
                                                 ${fecha.precio?.toLocaleString('es-AR')} ARS
-                                            </span>
+                                            </span> */}
                                         </label>
                                     </li>
                                 ))}
@@ -144,7 +147,7 @@ export default async function Page({ params }) {
                         </form>
                     </div>
                 </div>
-                <SliderGaleria imagenes={trip.galeria}/>
+                <SliderGaleria imagenes={trip.galeria} />
                 <section className="max-w-6xl mx-auto px-4 py-8">
                     <h2 className="text-2xl font-bold mb-4">Preguntas frecuentes</h2>
                     <div className="space-y-4">

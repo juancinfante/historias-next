@@ -9,13 +9,14 @@ export async function GET(req: NextRequest) {
     try {
         const client = await clientPromise
         const db = client.db('historias')
-        const trips = db.collection('trips')
+        const tripsCollection = db.collection('trips')
+        const reservasCollection = db.collection('reservas')
 
         const searchParams = req.nextUrl.searchParams
 
         const destino = searchParams.get('destino')
         const region = searchParams.get('region')
-        const origen = searchParams.get('origen') // <- este era el que faltaba
+        const origen = searchParams.get('origen')
         const mes = searchParams.get('mes')
 
         const page = parseInt(searchParams.get('page') || '1')
@@ -57,7 +58,7 @@ export async function GET(req: NextRequest) {
         }
 
         let sort: any = { creadoEn: -1 }
-        const total = await trips.countDocuments(query)
+        const total = await tripsCollection.countDocuments(query)
 
         const ordenPrecio = searchParams.get('ordenPrecio')
         if (ordenPrecio === 'asc') {
@@ -66,24 +67,50 @@ export async function GET(req: NextRequest) {
             sort = { precio: -1 }
         }
 
-        const resultados = await trips
+        const trips = await tripsCollection
             .find(query)
             .sort(sort)
             .skip(skip)
             .limit(limit)
             .toArray()
 
+        // Obtener los IDs de los viajes
+        const tripIds = trips.map(trip => trip._id)
+
+        // Buscar reservas de esos viajes
+        const reservas = await reservasCollection
+            .find({ viajeId: { $in: tripIds.map(id => id.toString()) } })
+            .toArray()
+
+        // Crear un mapa con el total de pasajeros por viaje
+        const pasajerosPorViaje: Record<string, number> = {}
+
+        reservas.forEach(reserva => {
+            const viajeId = reserva.viajeId
+            if (!pasajerosPorViaje[viajeId]) {
+                pasajerosPorViaje[viajeId] = 0
+            }
+            pasajerosPorViaje[viajeId] += reserva.cantidad || 0
+        })
+
+        // Agregar campo pasajerosReservados a cada viaje
+        const tripsConReservas = trips.map(trip => ({
+            ...trip,
+            pasajerosReservados: pasajerosPorViaje[trip._id.toString()] || 0
+        }))
+
         return NextResponse.json({
             page,
             limit,
             total,
             totalPages: Math.ceil(total / limit),
-            data: resultados
+            data: tripsConReservas
         })
     } catch (error) {
         console.error('Error al obtener viajes:', error)
         return NextResponse.json({ error: 'Error al obtener viajes' }, { status: 500 })
     }
 }
+
 
 

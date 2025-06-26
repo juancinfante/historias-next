@@ -52,7 +52,7 @@ export default function CarouselPaquetes() {
           </div>
         ) : (
           <Slider {...settings}>
-            {paquetes.map((paquete, i) => (
+            {[...paquetes].reverse().map((paquete, i) => (
               <div key={paquete._id || i} className="px-3">
                 <div className="relative h-[500px] rounded-lg overflow-hidden text-left">
                   <Image
