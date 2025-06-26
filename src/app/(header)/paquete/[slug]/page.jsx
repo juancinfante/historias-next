@@ -21,7 +21,7 @@ export async function generateMetadata({ params }) {
     }
 
     return {
-        title: `${trip.nombre} | Historias de Viaje`,
+        title: `${trip.nombre} | Historias Argentinas`,
         description: `Explorá el viaje a ${trip.destino} con ${trip.noches} noches y ${trip.dias} días. Salida desde ${trip.origen}.`,
         openGraph: {
             title: `${trip.nombre} | Historias de Viaje`,
