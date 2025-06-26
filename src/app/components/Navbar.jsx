@@ -56,7 +56,7 @@ export default function Navbar() {
           </ul>
 
           {/* Selector e botón reservar */}
-          <div className="hidden md:flex items-center space-x-4">
+          {/* <div className="hidden md:flex items-center space-x-4">
             <select
               className="border p-1 text-black bg-white"
               value={lang}
@@ -66,7 +66,7 @@ export default function Navbar() {
               <option value="en">EN</option>
             </select>
             <button className="bg-[rgb(43,52,71)] text-white px-4 py-2 rounded-lg shadow-md">RESERVAR</button>
-          </div>
+          </div> */}
 
           {/* Botón cerrar menú mobile */}
           {menuOpen && (

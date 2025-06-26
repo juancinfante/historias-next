@@ -34,14 +34,14 @@ export async function GET(req: NextRequest) {
         if (region) match.region = { $regex: new RegExp(region, 'i') }
         if (origen) match.origen = { $regex: new RegExp(origen, 'i') }
 
-        const pipeline: any[] = [
-            { $match: match }
-        ]
+        const pipeline: any[] = [{ $match: match }]
 
-        // Filtro por mes (usando $unwind para evitar error con $expr)
+        let filtrandoPorMes = false
+
         if (mes) {
             const mesNum = parseInt(mes)
             if (!isNaN(mesNum)) {
+                filtrandoPorMes = true
                 pipeline.push(
                     { $unwind: "$fechas" },
                     {
@@ -58,22 +58,48 @@ export async function GET(req: NextRequest) {
             }
         }
 
-        // Sorting, paginación y evitar duplicados por $unwind
+        if (filtrandoPorMes) {
+            // Volvemos a agrupar fechas para mantener la estructura original
+            pipeline.push(
+                {
+                    $group: {
+                        _id: "$_id",
+                        doc: { $first: "$$ROOT" },
+                        fechas: { $push: "$fechas" }
+                    }
+                },
+                {
+                    $addFields: {
+                        "doc.fechas": "$fechas"
+                    }
+                },
+                {
+                    $replaceRoot: {
+                        newRoot: "$doc"
+                    }
+                }
+            )
+        } else {
+            pipeline.push(
+                {
+                    $group: {
+                        _id: "$_id",
+                        doc: { $first: "$$ROOT" }
+                    }
+                },
+                {
+                    $replaceRoot: {
+                        newRoot: "$doc"
+                    }
+                }
+            )
+        }
+
+        // 🔁 APLICAR ORDENAMIENTO AHORA
         pipeline.push(
             { $sort: sort },
             { $skip: skip },
-            { $limit: limit },
-            {
-                $group: {
-                    _id: "$_id",
-                    doc: { $first: "$$ROOT" }
-                }
-            },
-            {
-                $replaceRoot: {
-                    newRoot: "$doc"
-                }
-            }
+            { $limit: limit }
         )
 
         // Ejecutar pipeline

@@ -4,6 +4,45 @@ import SelectorButacas from '@/components/SelectorButacas'
 import SliderGaleria from '@/components/SliderGaleria'
 import { CircleCheck, CircleX } from 'lucide-react'
 
+
+export async function generateMetadata({ params }) {
+    const { slug } = await params
+    const res = await fetch(`https://historias-henna.vercel.app/api/trips/${slug}`, {
+        cache: 'no-store'
+    })
+
+    const trip = await res.json()
+
+    if (!trip || trip.error) {
+        return {
+            title: 'Viaje no encontrado',
+            description: 'No pudimos encontrar el paquete de viaje solicitado.',
+        }
+    }
+
+    return {
+        title: `${trip.nombre} | Historias de Viaje`,
+        description: `Explorá el viaje a ${trip.destino} con ${trip.noches} noches y ${trip.dias} días. Salida desde ${trip.origen}.`,
+        openGraph: {
+            title: `${trip.nombre} | Historias de Viaje`,
+            description: `Viví la experiencia de viajar a ${trip.destino}. Incluye transporte, alojamiento y mucho más.`,
+            images: [
+                {
+                    url: trip.portada,
+                    width: 1200,
+                    height: 630,
+                    alt: `Portada del viaje a ${trip.destino}`,
+                },
+            ],
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title: `${trip.nombre} | Historias de Viaje`,
+            description: `Viví la experiencia de viajar a ${trip.destino}.`,
+            images: [trip.portada],
+        },
+    }
+}
 export default async function Page({ params }) {
     const { slug } = await params
     const res = await fetch(`https://historias-henna.vercel.app/api/trips/${slug}`, {
@@ -32,6 +71,7 @@ export default async function Page({ params }) {
         // Capitalizar la primera letra
         return fechaFormateada.charAt(0).toUpperCase() + fechaFormateada.slice(1)
     }
+
     return (
         <>
             {/* Hero */}

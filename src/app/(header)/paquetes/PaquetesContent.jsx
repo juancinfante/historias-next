@@ -13,6 +13,38 @@ export default function PaquetesContent() {
     const [trips, setTrips] = useState([])
     const [ordenPrecio, setOrdenPrecio] = useState('')
     const [loading, setLoading] = useState(true)
+    const [mesSeleccionado, setMesSeleccionado] = useState('')
+    const [origenSeleccionado, setOrigenSeleccionado] = useState('')
+
+
+    const handleMesChange = (e) => {
+        const mes = e.target.value
+        setMesSeleccionado(mes)
+        setFiltrosActivos((prev) => {
+            const sinMeses = prev.filter((f) => !esUnMes(f))
+            return [...sinMeses, mes]
+        })
+    }
+
+    const handleOrigenChange = (e) => {
+        const origen = e.target.value
+        setOrigenSeleccionado(origen)
+        setFiltrosActivos((prev) => {
+            const sinOrigen = prev.filter((f) => !esUnOrigen(f))
+            return [...sinOrigen, origen]
+        })
+    }
+
+    function esUnMes(filtro) {
+        return [
+            "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+            "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+        ].includes(filtro)
+    }
+
+    function esUnOrigen(filtro) {
+        return ["Buenos Aires", "Córdoba", "Rosario", "Santiago del Estero", "Tucumán","Salta","Catamarca"].includes(filtro)
+    }
 
     function formatFecha(fechaIso) {
         if (!fechaIso) return ''
@@ -51,7 +83,7 @@ export default function PaquetesContent() {
 
             if (['europa', 'brasil', 'argentina'].includes(lowerFiltro)) {
                 params.set('region', filtro)
-            } else if (['buenos aires', 'córdoba', 'rosario', 'santiago del estero', 'tucuman'].includes(lowerFiltro)) {
+            } else if (['Buenos Aires', 'Córdoba', 'Rosario', 'Santiago del Estero', 'Tucuman'].includes(lowerFiltro)) {
                 params.set('origen', filtro)
             } else {
                 params.set('destino', filtro)
@@ -70,9 +102,9 @@ export default function PaquetesContent() {
 
             let fetchedTrips = Array.isArray(data.data) ? data.data : []
 
-            if (ordenPrecio === 'asc') {
+            if (ordenPrecio === 'desc') {
                 fetchedTrips.sort((a, b) => a.precio - b.precio)
-            } else if (ordenPrecio === 'desc') {
+            } else if (ordenPrecio === 'asc') {
                 fetchedTrips.sort((a, b) => b.precio - a.precio)
             }
             setTrips(fetchedTrips)
@@ -223,11 +255,12 @@ export default function PaquetesContent() {
                                             <li key={mes}>
                                                 <label className="flex items-center">
                                                     <input
-                                                        type="checkbox"
+                                                        type="radio"
+                                                        name="salidasDesktop"
                                                         className="mr-2"
                                                         value={mes}
-                                                        checked={filtrosActivos.includes(mes)}
-                                                        onChange={handleCheckboxChange}
+                                                        checked={mesSeleccionado === mes}
+                                                        onChange={handleMesChange}
                                                     />
                                                     {mes}
                                                 </label>
@@ -239,35 +272,16 @@ export default function PaquetesContent() {
                                 <details className="mb-4">
                                     <summary className="cursor-pointer text-sm font-semibold mb-2">Desde</summary>
                                     <ul className="space-y-2 mt-2">
-                                        {["Buenos Aires", "Córdoba", "Rosario", "Santiago del Estero", "Tucuman"].map((item) => (
+                                        {["Buenos Aires", "Córdoba", "Rosario", "Santiago del Estero", "Tucumán","Salta","Catamarca"].map((item) => (
                                             <li key={item}>
                                                 <label className="flex items-center">
                                                     <input
-                                                        type="checkbox"
+                                                        type="radio"
+                                                        name="origenDesktop"
                                                         className="mr-2"
                                                         value={item}
-                                                        checked={filtrosActivos.includes(item)}
-                                                        onChange={handleCheckboxChange}
-                                                    />
-                                                    {item}
-                                                </label>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </details>
-
-                                <details>
-                                    <summary className="cursor-pointer text-sm font-semibold mb-2">Región</summary>
-                                    <ul className="space-y-2 mt-2">
-                                        {["Argentina", "Brasil", "Europa"].map((item) => (
-                                            <li key={item}>
-                                                <label className="flex items-center">
-                                                    <input
-                                                        type="checkbox"
-                                                        className="mr-2"
-                                                        value={item}
-                                                        checked={filtrosActivos.includes(item)}
-                                                        onChange={handleCheckboxChange}
+                                                        checked={origenSeleccionado === item}
+                                                        onChange={handleOrigenChange}
                                                     />
                                                     {item}
                                                 </label>
@@ -357,7 +371,7 @@ export default function PaquetesContent() {
                                                         {/* <h1 className='bg-red-200 text-red-950 font-semibold w-fit ml-auto p-1'>Ultimos lugares!</h1> */}
                                                         <div className="flex flex-col border-l-1 text-gray-700 md:ml-auto p-3 relative">
                                                             <h1 className='hidden md:block bg-green-200 text-green-950 w-fit ml-auto pt-1 pb-1 p-2 text-sm rounded-bl-md absolute top-0 right-0'>
-                                                                 {trip.pasajerosReservados}/{trip.lugares} lugares reservados
+                                                                {trip.pasajerosReservados}/{trip.lugares} lugares reservados
                                                             </h1>
                                                             <span className='text-xs text-gray-500 md:mt-[40px]'>Precio final por persona</span>
                                                             <div className="flex font-bold items-center gap-0.5 text-gray-700"><span className='text-md '>$</span><span className='text-3xl'>{Number(trip.precio).toLocaleString('es-AR')}</span></div>
@@ -414,13 +428,13 @@ export default function PaquetesContent() {
                         <li>
                             <label>
                                 <input type="radio" name="orden" value="Precio más bajo" className="mr-2" />
-                                Precio: menor a mayor
+                                Precio más bajo
                             </label>
                         </li>
                         <li>
                             <label>
                                 <input type="radio" name="orden" value="Precio más alto" className="mr-2" />
-                                Precio: mayor a menor
+                                Precio más alto
                             </label>
                         </li>
                         <li>
@@ -438,7 +452,7 @@ export default function PaquetesContent() {
                     </ul>
                 </div>
 
-                {/* Menú Filtros */}
+                {/* Menú Filtros Mobile*/}
                 <div
                     id="filtro-menu"
                     className="fixed bottom-0 left-0 right-0 bg-white border-t rounded-t-2xl p-4 hidden fade-slide z-50 max-h-[90vh] overflow-y-auto"
@@ -456,7 +470,7 @@ export default function PaquetesContent() {
                                 <li key={mes}>
                                     <label className="flex items-center">
                                         <input
-                                            type="checkbox"
+                                            type="radio"
                                             className="mr-2"
                                             value={mes}
                                             checked={filtrosActivos.includes(mes)}
@@ -487,26 +501,6 @@ export default function PaquetesContent() {
                             ))}
                         </ul>
                     </details>
-
-                    {/* <details>
-                        <summary className="cursor-pointer text-sm font-semibold mb-2">Región</summary>
-                        <ul className="space-y-2 mt-2">
-                            {["Argentina", "Brasil", "Europa"].map((item) => (
-                                <li key={item}>
-                                    <label className="flex items-center">
-                                        <input
-                                            type="checkbox"
-                                            className="mr-2"
-                                            value={item}
-                                            checked={filtrosActivos.includes(item)}
-                                            onChange={handleCheckboxChange}
-                                        />
-                                        {item}
-                                    </label>
-                                </li>
-                            ))}
-                        </ul>
-                    </details> */}
                 </div>
 
             </main>
