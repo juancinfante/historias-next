@@ -3,7 +3,7 @@ import { MongoClient } from 'mongodb'
 import clientPromise from '../../lib/mongodb'
 
 const uri = process.env.MONGODB_URI as string
-const client = new MongoClient(uri)
+// const client = new MongoClient(uri)
 
 export async function GET(req: NextRequest) {
     try {
@@ -23,77 +23,77 @@ export async function GET(req: NextRequest) {
         const limit = parseInt(searchParams.get('limit') || '10')
         const skip = (page - 1) * limit
 
-        const query: any = {}
+        const ordenPrecio = searchParams.get('ordenPrecio')
+        let sort: any = { creadoEn: -1 }
+        if (ordenPrecio === 'asc') sort = { precio: 1 }
+        if (ordenPrecio === 'desc') sort = { precio: -1 }
 
-        if (destino) {
-            query.destino = { $regex: new RegExp(destino, 'i') }
-        }
+        // Filtro base
+        const match: any = {}
+        if (destino) match.destino = { $regex: new RegExp(destino, 'i') }
+        if (region) match.region = { $regex: new RegExp(region, 'i') }
+        if (origen) match.origen = { $regex: new RegExp(origen, 'i') }
 
-        if (region) {
-            query.region = { $regex: new RegExp(region, 'i') }
-        }
+        const pipeline: any[] = [
+            { $match: match }
+        ]
 
-        if (origen) {
-            query.origen = { $regex: new RegExp(origen, 'i') }
-        }
-
+        // Filtro por mes (usando $unwind para evitar error con $expr)
         if (mes) {
             const mesNum = parseInt(mes)
-            if (!isNaN(mesNum) && mesNum >= 1 && mesNum <= 12) {
-                const ahora = new Date()
-                const añoActual = ahora.getFullYear()
-
-                const inicioMes = new Date(añoActual, mesNum - 1, 1)
-                const finMes = new Date(añoActual, mesNum, 1)
-
-                query.fechas = {
-                    $elemMatch: {
-                        salida: {
-                            $gte: inicioMes.toISOString(),
-                            $lt: finMes.toISOString()
+            if (!isNaN(mesNum)) {
+                pipeline.push(
+                    { $unwind: "$fechas" },
+                    {
+                        $match: {
+                            $expr: {
+                                $eq: [
+                                    { $month: { $toDate: "$fechas.salida" } },
+                                    mesNum
+                                ]
+                            }
                         }
                     }
-                }
+                )
             }
         }
 
-        let sort: any = { creadoEn: -1 }
-        const total = await tripsCollection.countDocuments(query)
+        // Sorting, paginación y evitar duplicados por $unwind
+        pipeline.push(
+            { $sort: sort },
+            { $skip: skip },
+            { $limit: limit },
+            {
+                $group: {
+                    _id: "$_id",
+                    doc: { $first: "$$ROOT" }
+                }
+            },
+            {
+                $replaceRoot: {
+                    newRoot: "$doc"
+                }
+            }
+        )
 
-        const ordenPrecio = searchParams.get('ordenPrecio')
-        if (ordenPrecio === 'asc') {
-            sort = { precio: 1 }
-        } else if (ordenPrecio === 'desc') {
-            sort = { precio: -1 }
-        }
+        // Ejecutar pipeline
+        const trips = await tripsCollection.aggregate(pipeline).toArray()
 
-        const trips = await tripsCollection
-            .find(query)
-            .sort(sort)
-            .skip(skip)
-            .limit(limit)
-            .toArray()
+        // Obtener cantidad total (sin paginar)
+        const total = await tripsCollection.countDocuments(match)
 
-        // Obtener los IDs de los viajes
-        const tripIds = trips.map(trip => trip._id)
-
-        // Buscar reservas de esos viajes
+        // Cargar reservas
+        const tripIds = trips.map(t => t._id)
         const reservas = await reservasCollection
             .find({ viajeId: { $in: tripIds.map(id => id.toString()) } })
             .toArray()
 
-        // Crear un mapa con el total de pasajeros por viaje
         const pasajerosPorViaje: Record<string, number> = {}
-
         reservas.forEach(reserva => {
             const viajeId = reserva.viajeId
-            if (!pasajerosPorViaje[viajeId]) {
-                pasajerosPorViaje[viajeId] = 0
-            }
-            pasajerosPorViaje[viajeId] += reserva.cantidad || 0
+            pasajerosPorViaje[viajeId] = (pasajerosPorViaje[viajeId] || 0) + (reserva.cantidad || 0)
         })
 
-        // Agregar campo pasajerosReservados a cada viaje
         const tripsConReservas = trips.map(trip => ({
             ...trip,
             pasajerosReservados: pasajerosPorViaje[trip._id.toString()] || 0

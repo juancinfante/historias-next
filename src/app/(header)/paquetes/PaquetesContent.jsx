@@ -318,7 +318,7 @@ export default function PaquetesContent() {
                                     ) : (
                                         <>
                                             <div className="grid gap-6">
-                                                {trips.map((trip) => (
+                                                {[...trips].reverse().map((trip) => (
                                                     <div
                                                         key={trip._id}
                                                         className="bg-white rounded shadow flex flex-col md:flex-row overflow-hidden md:h-[230px]"
@@ -471,7 +471,7 @@ export default function PaquetesContent() {
                     <details className="mb-4">
                         <summary className="cursor-pointer text-sm font-semibold mb-2">Desde</summary>
                         <ul className="space-y-2 mt-2">
-                            {["Buenos Aires", "Córdoba", "Rosario", "Santiago del Estero", "Tucuman"].map((item) => (
+                            {["Buenos Aires", "Córdoba", "Rosario", "Santiago del Estero", "Tucumán"].map((item) => (
                                 <li key={item}>
                                     <label className="flex items-center">
                                         <input
@@ -488,7 +488,7 @@ export default function PaquetesContent() {
                         </ul>
                     </details>
 
-                    <details>
+                    {/* <details>
                         <summary className="cursor-pointer text-sm font-semibold mb-2">Región</summary>
                         <ul className="space-y-2 mt-2">
                             {["Argentina", "Brasil", "Europa"].map((item) => (
@@ -506,7 +506,7 @@ export default function PaquetesContent() {
                                 </li>
                             ))}
                         </ul>
-                    </details>
+                    </details> */}
                 </div>
 
             </main>
